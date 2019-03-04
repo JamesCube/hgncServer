@@ -45,6 +45,16 @@ module.exports = {
         loaded = false;
     },
 
+    /**
+     * 生成6位数验证码
+     * @author chengjiajun
+     * @since 2019/02/25
+     * @returns {string}
+     */
+    genAuthCode() {
+        return ((Math.random() * 900000) | 100000)+'';
+    },
+
   // 字符串转对象，转换出错返回{}或者默认值
       JSONParse(str, defaultResult) {
         try {

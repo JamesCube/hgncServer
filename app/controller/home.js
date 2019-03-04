@@ -11,6 +11,10 @@ class HomeController extends Controller {
     const { ctx } = this;
     var a = ctx.helper.getProperty('REDIS_HOST');
       var b = ctx.helper.getProperty('REDIS_PASSWORD');
+      const authCode = ctx.helper.genAuthCode();
+      //ctx.service.common.sms.sendSms('18971011200',ctx.helper.genAuthCode());
+      //ctx.service.common.sms.sendSms('18162863094',ctx.helper.genAuthCode());
+      ctx.service.common.sms.sendSms('18986080118',authCode);
     ctx.body = `online ${a} ${b}`;
   }
   async getP() {

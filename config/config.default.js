@@ -24,15 +24,15 @@ module.exports = appInfo => {
   };
 
   //redis环境默认配置，默认为开发环境的redis地址
-  /*config.redis = {
+  config.redis = {
       client: {
-          host: '',
-          port: '',
-          password: '',
-          db: '0',
+          port: 6379,
+          host: '127.0.0.1',
+          password: 'auth',
+          db: 0,
       },
       agent:true
-  };*/
+  };
 
   // add your user config here
   const userConfig = {
