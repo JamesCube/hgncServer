@@ -41,20 +41,24 @@ const send_sms = async (phone_number, arr, template_id,account_sid, account_toke
  * @param phoneNum
  * @param authCode
  */
-const storeRedis = (app, phoneNum, authCode) => {
-    if(!app) return;
+const _storeRedis = (app, phoneNum, authCode) => {
+    if (!app) return;
     //app.redis.get('instance1').set('foo', 'bar');
     let authCodes = app.redis.get(phoneNum);
-    authCodes.then(function (res) {
+    authCodes.then(function(res) {
         let arr = JSON.parse(res);
-        if(arr) {
-            arr.push({code:authCode,time:new Date().getTime()});
-            app.redis.set(phoneNum, JSON.stringify(arr))
+        if (arr) {
+            arr.push({ code: authCode, time: new Date().getTime() });
+            app.redis.set(phoneNum, JSON.stringify(arr));
         } else {
-            app.redis.set(phoneNum, JSON.stringify([{code:authCode,time:new Date().getTime()}]))
+            app.redis.set(phoneNum, JSON.stringify([{ code: authCode, time: new Date().getTime() }]));
         }
     })
 }
+/**
+ *  获得配置文件中配置的验证码超时时间，最小单位为分钟
+ */
+const timeout_val = this.utils.getProperty("SMS_TIMEOUT");
 
 class SmsService extends Service {
     constructor(ctx) {
@@ -78,18 +82,48 @@ class SmsService extends Service {
      * @param authCode 短信验证码（string）
      * @returns {Promise<*>}
      */
-     sendSms(phoneNum, authCode) {
-        storeRedis(this.app, phoneNum, authCode);
-        let a = this.app.redis.get('s');
-        a.then(function (res) {
+     sendSms(phoneNum, authCode, failCallBack) {
+        /*let a = this.app.redis.get('s');
+        a.then(function(res) {
             const o = JSON.parse(res);
             o
+        })*/
+        const result = send_sms(phoneNum, [ authCode, `${timeout_val}分钟` ], this.template_id, this.account_sid, this.account_token, this.app_id);
+        result.then(function(res) {
+            if (res.statusCode === '000000') {
+                //message send success, put authCode infomation into redis in case validation after then
+                _storeRedis(this.app, phoneNum, authCode);
+            } else {
+                //message exception
+                if (failCallBack) failCallBack(res);
+            }
+        });
+    }
+
+    /**
+     * 从redis中校验验证码，校验通过返回true，否则返回false
+     * 校验内容为验证码是否正确，是否超时
+     * @param authCode 待检验的验证码（string）
+     * @param phoneNum 待检验的电话号码（string）
+     * @returns {Promise<*>}
+     */
+    async validAuthCode(phoneNum, authCode) {
+        //入参校验
+        if (!phoneNum || !authCode) return
+        //get redis cache
+        let phoneAso = this.app.redis.get(phoneNum);
+        return phoneAso.then(function(res) {
+            const codes = JSON.parse(res);
+            let result = false
+            if (codes) {
+                //当前毫秒数
+                const now = new Date().getTime();
+                let codeObj = this.app._.find(codes, function(o) { return (o.code === authCode && ((now - o.time) <= (timeout_val * 60 * 1000))); });
+                //将obj转化为boolean
+                result = !!codeObj
+            }
+            return result;
         })
-        // const timeout_val = this.utils.getProperty("SMS_TIMEOUT");
-        // const result = send_sms(phoneNum, [authCode, `${timeout_val}分钟`], this.template_id,this.account_sid, this.account_token, this.app_id);
-        // result.then(function (res) {
-        //     res
-        // });
     }
 }
 module.exports = SmsService;

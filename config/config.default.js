@@ -20,7 +20,7 @@ module.exports = appInfo => {
 
   //当用户 Session 的有效期仅剩下最大有效期一半的时候，重置 Session 的有效期
   config.session = {
-      renew: true
+      renew: true,
   };
 
   //redis环境默认配置，默认为开发环境的redis地址
@@ -31,7 +31,27 @@ module.exports = appInfo => {
           password: 'auth',
           db: 0,
       },
-      agent:true
+      agent: true,
+  };
+
+  exports.mysql = {
+      // 单数据库信息配置
+      client: {
+          // host
+          host: 'www.wolzche.com',
+          // 端口号
+          port: '3307',
+          // 用户名
+          user: 'wolzche',
+          // 密码
+          password: '9Kvvq20OOAPevDnL',
+          // 数据库名
+          database: 'hgnc',
+      },
+      // 是否加载到 app 上，默认开启
+      app: true,
+      // 是否加载到 agent 上，默认关闭
+      agent: false,
   };
 
   // add your user config here
