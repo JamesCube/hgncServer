@@ -11,6 +11,7 @@
     "egg-mysql": "^3.0.0",
     "egg-redis": "^2.3.0",
     "egg-scripts": "^2.11.0",
+    "egg-session": "^3.1.0",
     "egg-session-redis": "^2.1.0",
     "egg-validate": "^2.0.2"
   },

@@ -12,11 +12,11 @@ class UserService extends Service {
     }
 
     /**
-     * 新建用户
+     * 新建用户,成功返回新建条数1，错误返回具体的错误信息
      * @param params
      * @returns {boolean}
      */
-    insertOne(params) {
+    async insertOne(params) {
         const _now = new Date().getTime();
         const p = Object.assign(params, {
             id: this.utils.uuidv1(),
@@ -25,9 +25,15 @@ class UserService extends Service {
             createTime: _now,
             timeline: _now + '',
         });
-        const result = this.app.mysql.insert('t_user', p);
-        const insertSuccess = result.affectedRows === 1;
-        return insertSuccess
+        let result;
+        try{
+            const resp = await this.app.mysql.insert('t_user', p);
+            result = resp.affectedRows === 1;
+        } catch (e) {
+            result = e.sqlMessage
+        } finally {
+            return result
+        }
     }
 
     /**
@@ -44,11 +50,11 @@ class UserService extends Service {
      * 手机号方式登录时，校验手机和密码是否匹配
      * @param phoneNum
      * @param pwd
-     * @returns 登录成功返回user数据航，失败返回false
+     * @returns 登录成功返回user数据行，失败返回false
      */
-    validLogin(phoneNum, pwd) {
+    async validLogin(phoneNum, pwd) {
         let result = false;
-        const row = this.findOneByPhone(phoneNum);
+        const row = await this.findOneByPhone(phoneNum);
         if(row && (row.pwd === pwd)) {
             result = row;
         }
@@ -57,11 +63,23 @@ class UserService extends Service {
 
     /**
      * 更改密码
+     * 更改成功返回true，失败返回false
      * @param phoneNum
      * @param pwd
      */
-    changePwd(phoneNum, pwd) {
-
+    async changePwd(phoneNum, pwd) {
+        /*let result = await this.app.mysql.query(
+            'UPDATE `t_user` SET pwd = ? WHERE phoneNum = ?',
+            [pwd, phoneNum]
+        )*/
+        const row = {pwd: pwd};
+        const options  = {
+            where: {
+                phoneNum: phoneNum
+            }
+        };
+        let result = await this.app.mysql.update('posts', row, options);
+        return result.affectedRows === 1;
     }
 }
 module.exports = UserService;

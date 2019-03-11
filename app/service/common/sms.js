@@ -47,7 +47,7 @@ const _storeRedis = (app, phoneNum, authCode) => {
     let authCodes = app.redis.get(phoneNum);
     authCodes.then(function(res) {
         let arr = JSON.parse(res);
-        if (arr) {
+        if (arr && Array.isArray(arr)) {
             arr.push({ code: authCode, time: new Date().getTime() });
             app.redis.set(phoneNum, JSON.stringify(arr));
         } else {
@@ -55,10 +55,6 @@ const _storeRedis = (app, phoneNum, authCode) => {
         }
     })
 }
-/**
- *  获得配置文件中配置的验证码超时时间，最小单位为分钟
- */
-const timeout_val = this.utils.getProperty("SMS_TIMEOUT");
 
 class SmsService extends Service {
     constructor(ctx) {
@@ -88,15 +84,19 @@ class SmsService extends Service {
             const o = JSON.parse(res);
             o
         })*/
+        const timeout_val = this.utils.getProperty("SMS_TIMEOUT");
         const result = send_sms(phoneNum, [ authCode, `${timeout_val}分钟` ], this.template_id, this.account_sid, this.account_token, this.app_id);
-        result.then(function(res) {
+        return result.then(res => {
+            let msg;
             if (res.statusCode === '000000') {
                 //message send success, put authCode infomation into redis in case validation after then
                 _storeRedis(this.app, phoneNum, authCode);
+                msg = 'success'
             } else {
                 //message exception
-                if (failCallBack) failCallBack(res);
+                msg = res.statusMsg;
             }
+            return msg
         });
     }
 
@@ -111,19 +111,22 @@ class SmsService extends Service {
         //入参校验
         if (!phoneNum || !authCode) return
         //get redis cache
-        let phoneAso = this.app.redis.get(phoneNum);
-        return phoneAso.then(function(res) {
-            const codes = JSON.parse(res);
-            let result = false
-            if (codes) {
-                //当前毫秒数
-                const now = new Date().getTime();
-                let codeObj = this.app._.find(codes, function(o) { return (o.code === authCode && ((now - o.time) <= (timeout_val * 60 * 1000))); });
-                //将obj转化为boolean
-                result = !!codeObj
-            }
-            return result;
-        })
+        let phoneAso = await this.app.redis.get(phoneNum);
+        const codes = JSON.parse(phoneAso);
+        let result = false;
+        if (codes) {
+            //当前毫秒数
+            const now = new Date().getTime();
+            //获得配置文件中配置的验证码超时时间，最小单位为分钟
+            const timeout_val = this.utils.getProperty("SMS_TIMEOUT");
+            let codeObj = this.app._.find(codes, function(o) {
+                //为了防止前台传参不规范，这里用双等于，不用全等于
+                return (o.code == authCode && ((now - o.time) <= (timeout_val * 60 * 1000)));
+            });
+            //将obj转化为boolean
+            result = !!codeObj
+        }
+        return result;
     }
 }
 module.exports = SmsService;

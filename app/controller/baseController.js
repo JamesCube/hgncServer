@@ -1,0 +1,32 @@
+'use strict';
+
+const { Controller } = require('egg');
+
+/**
+ * BaseController
+ * 扩展Controller基类中的方法
+ * @class
+ * @author chengjiajun
+ */
+class BaseController extends Controller {
+    get user() {
+        return this.ctx.session.user;
+    }
+
+    success(data, status) {
+        this.ctx.body = { code: this.ctx.SUCCESS_CODE, data };
+        this.ctx.status = status || 200;
+    }
+
+    fail(code = 400, message) {
+        this.ctx.body = { code, message };
+        this.ctx.status = 200;
+    }
+
+    notFound(msg) {
+        msg = msg || 'not found';
+        this.ctx.throw(404, msg);
+    }
+}
+
+module.exports = BaseController;

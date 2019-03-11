@@ -34,7 +34,7 @@ module.exports = appInfo => {
       agent: true,
   };
 
-  exports.mysql = {
+  config.mysql = {
       // 单数据库信息配置
       client: {
           // host
@@ -53,6 +53,16 @@ module.exports = appInfo => {
       // 是否加载到 agent 上，默认关闭
       agent: false,
   };
+
+    config.security= {
+        csrf: {
+            enable: false,
+            useSession: true, // 默认为 false，当设置为 true 时，将会把 csrf token 保存到 Session 中
+            cookieName: 'csrfToken', // Cookie 中的字段名，默认为 csrfToken
+            sessionName: 'csrfToken', // Session 中的字段名，默认为 csrfToken
+            headerName: 'x-csrf-token', // 通过 header 传递 CSRF token 的默认字段为 x-csrf-token
+        }
+    }
 
   // add your user config here
   const userConfig = {

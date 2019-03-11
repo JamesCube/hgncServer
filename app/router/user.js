@@ -8,6 +8,12 @@
  */
 module.exports = app => {
     const { router, controller } = app;
-    router.get('/', controller.home.index);
-    router.get('/api/v1/isOnline', controller.home.isOnline);
+    //注册
+    router.post('/api/v1/user/signUp', controller.user.signUp);
+    //登录
+    router.post('/api/v1/user/login', controller.user.login);
+    //发送手机验证码
+    router.post('/api/v1/sms/getSms', controller.user.getSms);
+    //修改密码
+    router.post('/api/v1/user/changePwd', controller.user.changePwd);
 };

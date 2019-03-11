@@ -18,6 +18,7 @@ module.exports = {
         enable: true,
         package: 'egg-session-redis',
     },
+    session: true,
     mysql: {
         enable: true,
         package: 'egg-mysql',
