@@ -14,8 +14,9 @@ class UserController extends Controller {
         const { ctx, service } = this;
         const { phoneNum, pwd } = ctx.request.body;
         let res = await service.user.userService.validLogin(phoneNum, pwd);
+        //当登录成功时，res为user数据行，当登录失败时，返回false
         if(res) {
-            this.success("login success")
+            this.success(res)
         } else {
             this.fail("用户名或密码不正确")
         }

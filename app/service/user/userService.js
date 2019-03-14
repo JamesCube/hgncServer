@@ -42,7 +42,6 @@ class UserService extends Service {
      */
     findOneByPhone(phoneNum) {
         const row = this.app.mysql.get('t_user', { phone: phoneNum });
-        this.app.mysql
         return row;
     }
 
