@@ -17,7 +17,7 @@ class UserController extends Controller {
         if(res) {
             this.success("login success")
         } else {
-            this.fail(400, "用户名或密码不正确")
+            this.fail("用户名或密码不正确")
         }
     }
 
@@ -46,10 +46,10 @@ class UserController extends Controller {
                 ctx.app.redis.del(phoneNum);
                 this.success('signUp success');
             } else {
-                this.fail(400, res)
+                this.fail(res)
             }
         } else {
-            this.fail(400, '验证码校验失败')
+            this.fail('验证码校验失败')
         }
     }
 
@@ -66,7 +66,7 @@ class UserController extends Controller {
         if(result) {
             this.success('changePwd success')
         } else {
-            this.fail(400, 'changePwd failed')
+            this.fail('changePwd failed')
         }
     }
 
@@ -82,7 +82,7 @@ class UserController extends Controller {
         const authCode = ctx.helper.genAuthCode();
         //调用短信service，发送手机验证码
         const result = await service.common.sms.sendSms(phoneNum, authCode);
-        this.fail((result === 'success' ? 200 : 400), result);
+        this.success(result, (result === 'success' ? 200 : 400), );
     }
 }
 

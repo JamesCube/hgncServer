@@ -13,14 +13,13 @@ class BaseController extends Controller {
         return this.ctx.session.user;
     }
 
-    success(data, status) {
-        this.ctx.body = { code: this.ctx.SUCCESS_CODE, data };
-        this.ctx.status = status || 200;
+    success(data, status = 200) {
+        this.ctx.status = status;
+        this.ctx.body = { status: status, data: data };
     }
 
-    fail(code = 400, message) {
-        this.ctx.body = { code, message };
-        this.ctx.status = 200;
+    fail(message) {
+        this.success(message, 400);
     }
 
     notFound(msg) {
