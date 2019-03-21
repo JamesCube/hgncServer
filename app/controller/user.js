@@ -5,7 +5,7 @@ const Controller = require('./baseController');
 class UserController extends Controller {
 
     /**
-     * 用户登录
+     * app用户登录
      * @param phoneNum
      * @param pwd
      * @returns {Promise<void>}
@@ -16,9 +16,29 @@ class UserController extends Controller {
         let res = await service.user.userService.validLogin(phoneNum, pwd);
         //当登录成功时，res为user数据行，当登录失败时，返回false
         if(res) {
+            ctx.session.user = JSON.stringify(res);
             this.success(res)
         } else {
             this.fail("用户名或密码不正确")
+        }
+    }
+
+    /**
+     * 管理员登录
+     * @param phoneNum
+     * @param pwd
+     * @returns {Promise<void>}
+     */
+    async adminLogin() {
+        const { ctx, service } = this;
+        const { name, pwd } = ctx.request.body;
+        let res = await service.user.userService.validAdminLogin(name, pwd);
+        //当登录成功时，res为user数据行，当登录失败时，返回false
+        if(res) {
+            ctx.session.user = JSON.stringify(res);
+            this.success(res)
+        } else {
+            this.fail("管理员用户名或密码不正确")
         }
     }
 
@@ -58,16 +78,22 @@ class UserController extends Controller {
      * 修改密码
      * @param pwd
      * @param phoneNum
+     * @tips 前台需要做入参trim()处理，后台暂不处理
      * @returns {Promise<void>}
      */
     async changePwd() {
         const { ctx, service } = this;
         const { phoneNum, pwd } = ctx.request.body;
+        if(!phoneNum || !pwd) {
+            //入参校验
+            this.fail('手机号或密码不能为空')
+            return
+        }
         const result = await service.user.userService.changePwd(phoneNum, pwd);
-        if(result) {
+        if(result === true) {
             this.success('changePwd success')
         } else {
-            this.fail('changePwd failed')
+            this.fail(result)
         }
     }
 

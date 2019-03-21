@@ -3,6 +3,18 @@ const _ = require('lodash');
 
 module.exports = {
     _,
+    passport:{
+        serializeUser:(async(ctx, user) => {
+            return user;
+            // ctx.session.passport.user 也就是 ctx.user
+            // 如果没有 'return user', ctx.user 就是 undefined
+        }),
+        deserializeUser:(async (ctx, user) => {
+            // 处理 user
+            // ...
+            return user;
+        }),
+    },
     /*sessionStore:{
         /!**
          * 从redis中获得对象

@@ -54,6 +54,22 @@ class UserService extends Service {
     async validLogin(phoneNum, pwd) {
         let result = false;
         const row = await this.findOneByPhone(phoneNum);
+        if(row && (row.pwd === pwd) && row.alive) {
+            result = row;
+        }
+        return result;
+    }
+
+    /**
+     * 管理员后台页面登录
+     * @tips 在user表中后台管理员和普通用户的区别在于普通用户的登录名只能为手机号，而管理员可为任意字符串，且管理员的createTime毫秒数为0
+     * @param name
+     * @param pwd
+     * @returns 登录成功返回adminUser数据行，失败返回false
+     */
+    async validAdminLogin(name, pwd) {
+        let result = false;
+        const row = await this.app.mysql.get('t_user', { phone: name, alive: true, createTime: 0});
         if(row && (row.pwd === pwd)) {
             result = row;
         }
@@ -62,7 +78,7 @@ class UserService extends Service {
 
     /**
      * 更改密码
-     * 更改成功返回true，失败返回false
+     * 更改成功返回true，失败返回具体原因字符串
      * @param phoneNum
      * @param pwd
      */
@@ -74,11 +90,19 @@ class UserService extends Service {
         const row = {pwd: pwd};
         const options  = {
             where: {
-                phoneNum: phoneNum
+                //t_user表的手机号字段为phone而不是phoneNum
+                phone: phoneNum
             }
         };
-        let result = await this.app.mysql.update('posts', row, options);
-        return result.affectedRows === 1;
+        let result;
+        try {
+            let res = await this.app.mysql.update('t_user', row, options);
+            result = (res && (res.affectedRows === 1)) ? true : '无此手机号用户'
+        } catch (e) {
+            result = e.sqlMessage
+        } finally {
+            return result;
+        }
     }
 }
 module.exports = UserService;

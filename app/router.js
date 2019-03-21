@@ -8,5 +8,9 @@ module.exports = app => {
     router.get('/', controller.home.index);
     router.get('/api/v1/isOnline', controller.home.isOnline);
     //user路由
-    require('./router/user')(app);
+    require('./router/userRouter')(app);
+    //商品路由
+    require('./router/goodsRouter')(app);
+    //购物车路由
+    require('./router/cartRouter')(app);
 };
