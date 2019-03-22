@@ -54,23 +54,30 @@ class UserController extends Controller {
         const { phoneNum, pwd, inviteCode, authCode } = ctx.request.body;
         //验证码校验
         const validAuthCode = await service.common.sms.validAuthCode(phoneNum, authCode);
-        if(validAuthCode) {
+        const validInviteCode = await service.user.userService.validInviteCode(inviteCode);
+        if(!validAuthCode) {
+            this.fail('验证码校验失败')
+            return;
+        }
+        if(!validInviteCode) {
+            this.fail('邀请码校验失败')
+            return;
+        }
+        if(validAuthCode && validInviteCode) {
             //组装参数
             const params = {
                 phone: phoneNum,
                 pwd: pwd,
-                inviteCode: inviteCode,
+                parentCode: inviteCode,
             }
             let res = await service.user.userService.insertOne(params);
-            if(res === 1) {
+            if(res === true) {
                 //移除redis cache中的验证码
                 ctx.app.redis.del(phoneNum);
                 this.success('signUp success');
             } else {
                 this.fail(res)
             }
-        } else {
-            this.fail('验证码校验失败')
         }
     }
 

@@ -12,7 +12,7 @@ class UserService extends Service {
     }
 
     /**
-     * 新建用户,成功返回新建条数1，错误返回具体的错误信息
+     * 新建用户,成功返回true，错误返回具体的错误信息
      * @param params
      * @returns {boolean}
      */
@@ -103,6 +103,18 @@ class UserService extends Service {
         } finally {
             return result;
         }
+    }
+
+    /**
+     * 校验邀请码是否是已经存在的邀请码，防止用户随便填邀请码
+     * 存在返回true，不存在返回false
+     * @param code
+     * @return {Promise<void>}
+     */
+    async validInviteCode(code) {
+        if(!code.trim()) return false;
+        const row = await this.app.mysql.get('t_user', { inviteCode: code });
+        return !!row;
     }
 }
 module.exports = UserService;
