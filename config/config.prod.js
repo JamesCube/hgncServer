@@ -32,12 +32,12 @@ module.exports = appInfo => {
         agent: false,
     };
 
-    config.cluster= {
+    /*config.cluster = {
         listen: {
             port: 8800,
-            hostname: '127.0.0.1',
+            hostname: '0.0.0.0',
         },
-    };
+    };*/
 
     config.security= {
         csrf: {

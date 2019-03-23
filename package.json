@@ -30,7 +30,7 @@
     "node": ">=8.9.0"
   },
   "scripts": {
-    "start": "egg-scripts start --daemon --title=egg-server-hgncServer",
+    "start": "egg-scripts start --daemon --title=egg-server-hgncServer --ignore-stderr",
     "stop": "egg-scripts stop --title=egg-server-hgncServer",
     "dev": "egg-bin dev",
     "debug": "egg-bin debug",
