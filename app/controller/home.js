@@ -1,6 +1,6 @@
 'use strict';
 
-const Controller = require('egg').Controller;
+const Controller = require('./baseController');
 
 class HomeController extends Controller {
     async index() {
@@ -20,10 +20,17 @@ class HomeController extends Controller {
         ctx.body = { code: 400, msg:`online ${a} ${b}` };
         ctx.status = 400;
     }
-    async getP() {
+    async getCusConfig() {
         const { ctx } = this;
-        ctx.helper.getProperty('a');
-        ctx.body = 'online';
+        const config = ctx.helper.getAllProperty();
+        this.success(config);
+    }
+
+    async reloadConfigs() {
+        const { ctx } = this;
+        ctx.helper.reloadProperties();
+        const config = ctx.helper.getAllProperty();
+        this.success(config);
     }
 }
 

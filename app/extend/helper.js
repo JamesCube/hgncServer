@@ -37,6 +37,27 @@ module.exports = {
     },
 
     /**
+     * 获得所有的配置项
+     * @author chengjiajun
+     * @since 2019/03/23
+     * @returns {*}
+     */
+    getAllProperty() {
+        if (!loaded) {
+            const file = path.join(__dirname, custom_config_url);
+            try {
+                const result = fs.readFileSync(file, 'utf-8');
+                loaded = true;
+                properties = JSON.parse(result);
+            } catch(e) {
+                loaded = false;
+                this.ctx.logger.error(new Error('读取自定义配置文件失败'));
+            }
+        }
+        return properties;
+    },
+
+    /**
      * 重置自定义配置文件
      * 下次读取的时候会重新读取配置文件
      * @author chengjiajun

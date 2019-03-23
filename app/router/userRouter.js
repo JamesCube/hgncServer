@@ -18,4 +18,6 @@ module.exports = app => {
     router.post('/v1/api/sms/sendSms', controller.user.getSms);
     //修改密码
     router.post('/v1/api/user/changePwd', controller.user.changePwd);
+    //修改密码
+    router.post('/v1/api/user/forgetPwd', controller.user.forgetPwd);
 };

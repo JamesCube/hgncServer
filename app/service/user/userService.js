@@ -88,11 +88,11 @@ class UserService extends Service {
             [pwd, phoneNum]
         )*/
         const row = {pwd: pwd};
-        const options  = {
+        const options = {
             where: {
                 //t_user表的手机号字段为phone而不是phoneNum
-                phone: phoneNum
-            }
+                phone: phoneNum,
+            },
         };
         let result;
         try {

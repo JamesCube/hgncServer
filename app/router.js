@@ -6,7 +6,8 @@
 module.exports = app => {
     const { router, controller } = app;
     router.get('/', controller.home.index);
-    router.get('/api/v1/isOnline', controller.home.isOnline);
+    router.post('/v1/api/common/configs', controller.home.getCusConfig);
+    router.post('/v1/api/common/reloadConfigs', controller.home.reloadConfigs);
     //user路由
     require('./router/userRouter')(app);
     //商品路由

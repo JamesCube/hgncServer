@@ -105,6 +105,36 @@ class UserController extends Controller {
     }
 
     /**
+     * 忘记密码,重置密码
+     * @param pwd
+     * @param phoneNum
+     * @tips 需要发送验证码验证
+     * @returns {Promise<void>}
+     */
+    async forgetPwd() {
+        const { ctx, service } = this;
+        const { phoneNum, pwd, authCode } = ctx.request.body;
+        if(!phoneNum || !pwd) {
+            //入参校验
+            this.fail('手机号或密码不能为空')
+            return
+        }
+        const validAuthCode = await service.common.sms.validAuthCode(phoneNum, authCode);
+        if(!validAuthCode) {
+            this.fail('验证码校验失败')
+            return;
+        }
+        const result = await service.user.userService.changePwd(phoneNum, pwd);
+        if(result === true) {
+            //移除redis cache中的验证码
+            ctx.app.redis.del(phoneNum);
+            this.success('reset password success');
+        } else {
+            this.fail(result);
+        }
+    }
+
+    /**
      * 发送手机验证码
      * @param phoneNum
      * @returns {Promise<void>}
@@ -116,7 +146,7 @@ class UserController extends Controller {
         const authCode = ctx.helper.genAuthCode();
         //调用短信service，发送手机验证码
         const result = await service.common.sms.sendSms(phoneNum, authCode);
-        this.success(result, (result === 'success' ? 200 : 400), );
+        this.success(result, (result === 'success' ? 200 : 400));
     }
 }
 
