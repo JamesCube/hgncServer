@@ -13,7 +13,7 @@ class GoodsController extends Controller {
         const { ctx, service } = this;
         const { classScheme } = ctx.request.body;
         //入参校验
-        if(!(classScheme.trim())) {
+        if(!classScheme || !(classScheme.trim())) {
             this.fail("classScheme is required");
             return;
         }
