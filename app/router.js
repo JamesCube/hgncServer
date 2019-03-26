@@ -14,4 +14,6 @@ module.exports = app => {
     require('./router/goodsRouter')(app);
     //购物车路由
     require('./router/cartRouter')(app);
+    //地址管理路由
+    require('./router/addressRouter')(app);
 };

@@ -1,6 +1,6 @@
 'use strict';
 
-const Service = require('egg').Service;
+const Service = require('../base/baseService');
 
 const moment = require('moment');
 const crypto = require('crypto');
