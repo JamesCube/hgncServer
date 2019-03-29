@@ -38,7 +38,11 @@ class UserController extends Controller {
             return;
         }
         const res = await service.address.addressService.editAddressRow(id, params);
-        this.success(`update address ${res ? "success" : "failed"}`, res ? 200 : 400);
+        if(res === true) {
+            this.success("update address success");
+        } else {
+            this.fail(res)
+        }
     }
 
     /**

@@ -35,7 +35,6 @@ class UserService extends Service {
                 //将该用户名下其他的地址，是否默认项设置为false
                 const options = {
                     where: {
-                        //t_user表的手机号字段为phone而不是phoneNum
                         userId: userId,
                         alive: true,
                     },
@@ -61,12 +60,41 @@ class UserService extends Service {
      * 编辑地址信息
      * @param id 主键
      * @param params 待编辑的数据信息
-     * @return boolean 成功返回true，失败返回false
+     * @return boolean 成功返回true，失败返回false或具体报错原因
      */
     async editAddressRow(id, params) {
         params.id = id;
-        const result = await this.app.mysql.update('t_address', params);
-        return result.affectedRows === 1;
+        let isDefaultAddress = !!params.default;
+        //根据address数据行id查询出用户userId,查询不需要用到事务控制，这里没有使用conn
+        const row = isDefaultAddress ? await this.app.mysql.get('t_address', { id: id }) : null;
+        const conn = await this.app.mysql.beginTransaction();
+        let result;
+        try {
+            if(isDefaultAddress) {
+                if(row && row.userId) {
+                    //将该用户名下其他的地址，是否默认项设置为false
+                    const options = {
+                        where: {
+                            userId: row.userId,
+                            alive: true,
+                        },
+                    };
+                    await conn.update('t_address', { default: false }, options);
+                }
+            }
+            const resp = await conn.update('t_address', params);
+            result = resp.affectedRows === 1;
+            if(result) {
+                //提交事务
+                await conn.commit();
+            }
+        } catch (e) {
+            //发生异常回滚事务操作
+            await conn.rollback();
+            result = e.sqlMessage
+        } finally {
+            return result;
+        }
     }
 
     /**
