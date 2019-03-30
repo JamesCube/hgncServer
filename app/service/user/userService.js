@@ -116,5 +116,27 @@ class UserService extends Service {
         const row = await this.app.mysql.get('t_user', { inviteCode: code });
         return !!row;
     }
+
+    /**
+     * 修改用户二级密码
+     * 操作成功返回true，失败返回false或报错原因
+     * @return {Promise<void>}
+     */
+    async updateSecondaryPwd(userId, pwd) {
+        const row = {
+            id: userId,
+            secondaryPwd: pwd,
+            timeLine: new Date().getTime(),
+        };
+        let result;
+        try {
+            const res = await this.app.mysql.update('t_user', row);
+            result = (res.affectedRows === 1);
+        } catch (e) {
+            result = e.sqlMessage
+        } finally {
+            return result;
+        }
+    }
 }
 module.exports = UserService;

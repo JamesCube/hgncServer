@@ -20,4 +20,12 @@ module.exports = app => {
     router.post('/v1/api/user/changePwd', controller.user.changePwd);
     //修改密码
     router.post('/v1/api/user/forgetPwd', controller.user.forgetPwd);
+    //设置二级密码
+    router.post('/v1/api/user/setSecondaryPwd', controller.user.setSecondaryPwd);
+    //修改密码（需要输入原二级密码）
+    router.post('/v1/api/user/changeSecondaryPwd', controller.user.changeSecondaryPwd);
+    //忘记二级密码（需要校验短信验证码）
+    router.post('/v1/api/user/forgetSecondaryPwd', controller.user.forgetSecondaryPwd);
+    //校验二级密码
+    router.post('/v1/api/user/validSecondaryPwd', controller.user.validSecondaryPwd);
 };

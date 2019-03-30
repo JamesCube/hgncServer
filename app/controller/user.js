@@ -148,6 +148,46 @@ class UserController extends Controller {
         const result = await service.common.sms.sendSms(phoneNum, authCode);
         this.success(result, (result === 'success' ? 200 : 400));
     }
+
+    /**
+     * 设置用户二级密码
+     * @param userId 用户id
+     * @param pwd 二级密码
+     * @return {Promise<void>}
+     */
+    async setSecondaryPwd() {
+        const { ctx, service } = this;
+        const { userId, pwd } = ctx.request.body;
+        if(!userId) {
+            //入参校验
+            this.fail('userId is required');
+            return
+        }
+        if(!pwd || !pwd.trim()) {
+            this.fail('secondary password is required');
+            return
+        }
+        const result = await service.user.userService.updateSecondaryPwd(userId, pwd);
+        if(result === true) {
+            this.success("set secondary password success");
+        } else {
+            this.fail(result);
+        }
+    }
+
+    async changeSecondaryPwd() {
+        const { userId, pwd } = ctx.request.body;
+        if(!userId) {
+            //入参校验
+            this.fail('userId is required');
+            return
+        }
+        if(!pwd || !pwd.trim()) {
+            //入参校验
+            this.fail('secondary password is required');
+            return
+        }
+    }
 }
 
 module.exports = UserController;
