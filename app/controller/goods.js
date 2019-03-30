@@ -89,9 +89,25 @@ class GoodsController extends Controller {
             return;
         }
         const res = await service.goods.goodsService.searchGoodsByTitle(title, page, pageSize);
-        this.success(res)
+        this.success(res);
     }
 
+    /**
+     * 根据用户id和区域id，查询用户推送商品列表，默认返回4个商品（不分页）
+     * @param userId 用户id
+     * @param areaId 区域id
+     * @param num 商品数量
+     */
+    async goodsRecommend() {
+        const { ctx, service } = this;
+        const { userId, areaId, num } = ctx.request.body;
+        if(!userId || !userId.trim()) {
+            this.fail("userId is required");
+            return;
+        }
+        const res = await service.goods.goodsService.recommendGoods(userId, areaId, num);
+        this.success(res);
+    }
 
 }
 

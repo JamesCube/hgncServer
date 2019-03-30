@@ -18,4 +18,6 @@ module.exports = app => {
     router.post('/v1/api/goods/goodsPageList', controller.goods.goodsPageList);
     //商品名称模糊搜索
     router.post('/v1/api/goods/search', controller.goods.searchGoods);
+    //获取推荐给指定用户的商品列表
+    router.post('/v1/api/goods/recommend', controller.goods.goodsRecommend);
 };

@@ -179,6 +179,20 @@ class goodsService extends Service {
         return res
     }
 
+    /**
+     * 根据用户id和区域id查询用户推荐商品列表
+     * @param userId
+     * @param areaId
+     * @param num
+     * @return {Promise<void>}
+     */
+    async recommendGoods(userId, areaId = 'default', num = 4) {
+        const arr = this.utils.getProperty("DEFAULT_GOODS_RECOMMEND");
+        //数组切片，返回取前num个数组元素的新数组
+        const ids = arr.slice(0, num);
+        const res = this.getByIds('t_goods', ids);
+        return res;
+    }
 
 }
 module.exports = goodsService;
