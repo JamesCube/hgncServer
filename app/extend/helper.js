@@ -10,12 +10,13 @@ const custom_config_url = '../../config/custom_config.json';
 //是否已经加载过配置文件，默认为false
 let loaded = false;
 let properties = null;
-const SnowflakeId = require('snowflake-id');
+const SnowflakeCodon = require("snowflake-codon");
 // Initialize snowflake
-const snowflake = new SnowflakeId({
-    mid: 42,
-    offset: (2019 - 1970) * 31536000 * 1000,
-});
+var appId = 1; //default value 0
+var machineId = 1; //default value 0
+var firstYear = 2019; //default value 1970
+var timestampPrecision = 200; // optional, default value 1000 (ms)
+const snowflake = new SnowflakeCodon(appId, machineId, firstYear, timestampPrecision);
 
 module.exports = {
     uuidv1,
@@ -112,7 +113,7 @@ module.exports = {
      */
     genSnowId() {
         //npm i snowflake-id
-        return snowflake.generate();
+        return snowflake.nextId();
     },
 
   // 字符串转对象，转换出错返回{}或者默认值

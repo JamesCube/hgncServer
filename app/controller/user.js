@@ -149,6 +149,35 @@ class UserController extends Controller {
         this.success(result, (result === 'success' ? 200 : 400));
     }
 
+
+    /**
+     * 修改用户绑定的手机号
+     * 只能在登录进去之后修改手机号
+     * @param userId
+     * @param phone
+     * @return {Promise<void>}
+     */
+    async changePhone() {
+        const { ctx, service } = this;
+        const { userId, phoneNum, authCode } = ctx.request.body;
+        if(!userId) {
+            //入参校验
+            this.fail('userId is required');
+            return
+        }
+        const validAuthCode = await service.common.sms.validAuthCode(phoneNum, authCode);
+        if(!validAuthCode) {
+            this.fail('验证码校验失败');
+            return;
+        }
+        const result = await service.user.userService.change_bind_phone(userId, phone);
+        if(result === 1) {
+            this.success("bind new phoneNum success");
+        } else {
+            this.fail(result);
+        }
+    }
+
     /**
      * 设置用户二级密码
      * @param userId 用户id
@@ -175,7 +204,74 @@ class UserController extends Controller {
         }
     }
 
+    /**
+     * 修改二级密码，需要校验原二级密码是否正确
+     * @param userId 用户id
+     * @param oldPwd 旧二级密码
+     * @param newPwd 新二级密码
+     * @return {Promise<void>}
+     */
     async changeSecondaryPwd() {
+        const { ctx, service } = this;
+        const { userId, oldPwd, newPwd } = ctx.request.body;
+        if(!userId) {
+            //入参校验
+            this.fail('userId is required');
+            return
+        }
+        if(!oldPwd || !oldPwd.trim() || !newPwd || !newPwd.trim()) {
+            //入参校验
+            this.fail('secondary password is required');
+            return
+        }
+        const result = await service.user.userService.change_secondary_pwd(userId, oldPwd, newPwd);
+        if(result === true) {
+            this.success("change secondary password success");
+        } else {
+            this.fail(result);
+        }
+    }
+
+    /**
+     * 忘记二级密码，需要校验短信验证码
+     * @param phoneNum
+     * @param authCode
+     * @param newPwd
+     * @return {Promise<void>}
+     */
+    async forgetSecondaryPwd() {
+        const { ctx, service } = this;
+        const { phoneNum, authCode, newPwd } = ctx.request.body;
+        const validAuthCode = await service.common.sms.validAuthCode(phoneNum, authCode);
+        if(!validAuthCode) {
+            this.fail('验证码校验失败');
+            return;
+        }
+        if(!newPwd || !newPwd.trim()) {
+            this.fail('secondary password is required');
+            return
+        }
+        const userRow = await service.user.userService.findOneByPhone(phoneNum);
+        if(!userRow || !userRow.id) {
+            this.fail('not such user');
+            return
+        }
+        const result = await service.user.userService.updateSecondaryPwd(userRow.id, pwd);
+        if(result === true) {
+            this.success("reset secondary password success");
+        } else {
+            this.fail(result);
+        }
+    }
+
+    /**
+     * 校验用户二级密码，校验通过返回true，失败返回false
+     * @param userId
+     * @param pwd
+     * @return {Promise<void>}
+     */
+    async validSecondaryPwd() {
+        const { ctx, service } = this;
         const { userId, pwd } = ctx.request.body;
         if(!userId) {
             //入参校验
@@ -183,10 +279,11 @@ class UserController extends Controller {
             return
         }
         if(!pwd || !pwd.trim()) {
-            //入参校验
             this.fail('secondary password is required');
             return
         }
+        const result = await service.user.userService.valid_secondary_pwd(userId, pwd);
+        this.success(result);
     }
 }
 

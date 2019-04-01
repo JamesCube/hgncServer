@@ -41,7 +41,7 @@ class UserService extends Service {
      * @param phoneNum
      */
     findOneByPhone(phoneNum) {
-        const row = this.app.mysql.get('t_user', { phone: phoneNum });
+        const row = this.app.mysql.get('t_user', { phone: phoneNum, alive: true });
         return row;
     }
 
@@ -118,7 +118,31 @@ class UserService extends Service {
     }
 
     /**
-     * 修改用户二级密码
+     * 修改用户绑定的手机号,成功返回true，失败返回具体错误信息
+     * @param userId
+     * @param phoneNum
+     * @return {Promise<*>}
+     */
+    async change_bind_phone(userId, phoneNum) {
+        const row = {phone: phoneNum};
+        const options = {
+            where: {
+                id: userId,
+            },
+        };
+        let result;
+        try {
+            let res = await this.app.mysql.update('t_user', row, options);
+            result = res.affectedRows === 1;
+        } catch (e) {
+            result = e.sqlMessage
+        } finally {
+            return result;
+        }
+    }
+
+    /**
+     * 修改用户二级密码(直接修改)
      * 操作成功返回true，失败返回false或报错原因
      * @return {Promise<void>}
      */
@@ -137,6 +161,50 @@ class UserService extends Service {
         } finally {
             return result;
         }
+    }
+
+    /**
+     * 修改用户二级密码(需要校验原二级密码)
+     * 修改成功返回true，修改失败返回false或具体错误原因
+     * @param userId
+     * @param oldPwd
+     * @param newPwd
+     * @return {Promise<*>}
+     */
+    async change_secondary_pwd(userId, oldPwd, newPwd) {
+        //验证旧密码是否正确
+        const validFlag = await this.valid_secondary_pwd(userId, oldPwd);
+        if(!validFlag) {
+            return '原二级密码校验失败'
+        }
+        let result = await this.updateSecondaryPwd(userId, newPwd);
+        return result;
+    }
+
+    /**
+     * 校验二级密码，校验成功返回true，失败返回false
+     * @param userId
+     * @param pwd
+     * @return {Promise<string>}
+     */
+    async valid_secondary_pwd(userId, pwd) {
+        let result = false;
+        const row = await this._getUserById(userId);
+        if(row && (row.secondaryPwd === pwd)) {
+            result = true;
+        }
+        return result;
+    }
+
+    /**
+     * 根据id获取user数据行
+     * @param userId
+     * @return {Promise<*>}
+     * @private
+     */
+    async _getUserById(userId) {
+        const row = await this.app.mysql.get('t_user', { id: userId, alive: true });
+        return row;
     }
 }
 module.exports = UserService;

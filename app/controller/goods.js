@@ -101,10 +101,6 @@ class GoodsController extends Controller {
     async goodsRecommend() {
         const { ctx, service } = this;
         const { userId, areaId, num } = ctx.request.body;
-        if(!userId || !userId.trim()) {
-            this.fail("userId is required");
-            return;
-        }
         const res = await service.goods.goodsService.recommendGoods(userId, areaId, num);
         this.success(res);
     }
