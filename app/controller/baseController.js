@@ -9,7 +9,7 @@ const { Controller } = require('egg');
  * @author chengjiajun
  */
 class BaseController extends Controller {
-    get user() {
+    getUser() {
         return this.ctx.session.user;
     }
 
@@ -20,6 +20,20 @@ class BaseController extends Controller {
 
     fail(message) {
         this.success(message, 400);
+    }
+
+    /**
+     * 用户级日志，记录到数据库中
+     * @param type
+     * @param executor
+     * @param influencer
+     * @param description
+     * @return {Promise<*>}
+     */
+    async log(type, executor, influencer, description) {
+        const { service } = this;
+        const res = await service.base.baseService.log(type, executor, influencer, description);
+        return res
     }
 
     notFound(msg) {

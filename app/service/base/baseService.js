@@ -61,5 +61,35 @@ class baseService extends Service {
         return result;
     }
 
+    /**
+     * 记录操作日志到数据库表里，相较于记录系统级日志到txt文件里，记录用户操作级的日志到表里，更方便查询
+     * 插入日志数据成功返回true，失败返回false或具体错误信息
+     * @param type
+     * @param executor
+     * @param influencer
+     * @param description
+     * @return {Promise<*>}
+     */
+    async log(type, executor, influencer, description) {
+        const _now = new Date().getTime();
+        const p = {
+            id: this.utils.uuidv1(),
+            type: type,
+            executor: executor,
+            influencer: influencer,
+            description: description,
+            createTime: _now,
+        };
+        let result;
+        try{
+            const resp = await this.app.mysql.insert('t_log', p);
+            result = resp.affectedRows === 1;
+        } catch (e) {
+            result = e.sqlMessage
+        } finally {
+            return result
+        }
+    }
+
 }
 module.exports = baseService;

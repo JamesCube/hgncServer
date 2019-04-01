@@ -112,7 +112,7 @@ module.exports = {
      * @since 2019/03/31
      */
     genSnowId() {
-        //npm i snowflake-id
+        //npm i snowflake-codon
         return snowflake.nextId();
     },
 

@@ -16,6 +16,7 @@ class UserController extends Controller {
         let res = await service.user.userService.validLogin(phoneNum, pwd);
         //当登录成功时，res为user数据行，当登录失败时，返回false
         if(res) {
+            this.log("login", phoneNum, phoneNum, '用户登录');
             ctx.session.user = JSON.stringify(res);
             this.success(res)
         } else {
@@ -98,6 +99,7 @@ class UserController extends Controller {
         }
         const result = await service.user.userService.changePwd(phoneNum, pwd);
         if(result === true) {
+            this.log("changePwd", phoneNum, phoneNum, '修改用户登录密码');
             this.success('changePwd success')
         } else {
             this.fail(result)
@@ -128,6 +130,7 @@ class UserController extends Controller {
         if(result === true) {
             //移除redis cache中的验证码
             ctx.app.redis.del(phoneNum);
+            this.log("forgetPwd", phoneNum, phoneNum, '用户重置登录密码');
             this.success('reset password success');
         } else {
             this.fail(result);
@@ -171,7 +174,8 @@ class UserController extends Controller {
             return;
         }
         const result = await service.user.userService.change_bind_phone(userId, phone);
-        if(result === 1) {
+        if(result === true) {
+            this.log("changeBindPhone", userId, userId, '用户修改绑定的手机号');
             this.success("bind new phoneNum success");
         } else {
             this.fail(result);
@@ -226,6 +230,7 @@ class UserController extends Controller {
         }
         const result = await service.user.userService.change_secondary_pwd(userId, oldPwd, newPwd);
         if(result === true) {
+            this.log("changeSecondaryPwd", userId, userId, '用户修改2级密码成功');
             this.success("change secondary password success");
         } else {
             this.fail(result);
@@ -258,6 +263,8 @@ class UserController extends Controller {
         }
         const result = await service.user.userService.updateSecondaryPwd(userRow.id, pwd);
         if(result === true) {
+            //日志记录
+            this.log("resetSecondaryPwd", userRow.id, userRow.id, '用户重置2级密码成功');
             this.success("reset secondary password success");
         } else {
             this.fail(result);
