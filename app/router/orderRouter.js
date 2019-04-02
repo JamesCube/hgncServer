@@ -1,0 +1,21 @@
+'use strict';
+
+/**
+ * 购物车相关路由模块
+ * @author chengjiajun
+ * @since 2019/03/21
+ * @param {Egg.Application} app - egg application
+ */
+module.exports = app => {
+    const { router, controller } = app;
+    //生成订单
+    router.post('/v1/api/order/create', controller.order.createOrder);
+    //根据用户id，分页查询我的订单详情
+    router.post('/v1/api/order/list', controller.order.orderList);
+    //删除订单信息
+    router.post('/v1/api/order/delete', controller.order.deleteOrders);
+    //支付成功后的回调
+    router.post('/v1/api/order/paySuccess', controller.order.paySuccess);
+    //确认收货
+    router.post('/v1/api/order/received', controller.order.received);
+};

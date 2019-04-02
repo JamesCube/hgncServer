@@ -105,6 +105,24 @@ module.exports = {
         }
     },
 
+    Enum:{
+        ORDER_STATUS: {
+            // "0"为待付款，
+            WAIT_PAY: "0",
+            // "1"为已付款待发货，
+            ALREADY_PAY: "1",
+            // "2"为已发货待收货，
+            HAS_DELIVER: "2",
+            // "d"为确认收货已完成(done)交易成功状态,
+            DONE: "d",
+            // "c"为未付款订单已取消(cancel)状态,
+            CANCEL_WITHOUT_PAY: "c",
+            // "n"为已付款订单取消未退款状态
+            CANCEL_BUT_PAY: "n",
+            // "a"为已付款订单取消已退款状态
+            CANCEL_DONE: "a",
+        }
+    },
 
     /**
      * 雪花算法，自增id

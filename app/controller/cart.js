@@ -2,7 +2,7 @@
 
 const Controller = require('./baseController');
 
-class GoodsController extends Controller {
+class CartController extends Controller {
 
     /**
      * 添加商品至购物车
@@ -86,4 +86,4 @@ class GoodsController extends Controller {
 
 }
 
-module.exports = GoodsController;
+module.exports = CartController;
