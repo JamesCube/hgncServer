@@ -58,7 +58,11 @@ class UserController extends Controller {
             return;
         }
         const res = await service.address.addressService.setAlive("t_address", id, false);
-        this.success(`delete address ${res ? "success" : "failed"}`, res ? 200 : 400);
+        if(res === true) {
+            this.success("delete address success");
+        } else {
+            this.fail(res);
+        }
     }
 
     /**

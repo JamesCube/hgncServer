@@ -115,13 +115,14 @@ class goodsService extends Service {
      * @param type string 商品类型id
      * @return {Promise<void>}
      */
-    async goods_page_list(type, page = 1, pageSize = 10) {
+    async goods_page_list(type, page = 1, pageSize = 10, orderBy = [['createTime','desc']]) {
         //查询未分页前的数据行总数
         let promise_getGoodsNum = this._getGoodsNum(type);
         //查询分页数据
         let promise_getGoods = this.app.mysql.select('t_goods', {
             where: { type: type, alive: true },
             limit: pageSize, // 返回数据量
+            orders: orderBy,
             offset: (page - 1) * pageSize, // 数据偏移量
         });
         let res = await Promise.all([promise_getGoodsNum, promise_getGoods]).then(resArr => {
@@ -194,5 +195,77 @@ class goodsService extends Service {
         return res;
     }
 
+    /**
+     * 新增商品规格（批量接口）,成功返回true，失败返回错误信息
+     * pc后台管理接口
+     * @param goodsId
+     * @param items
+     * @return {Promise<void>}
+     */
+    async standard_add(goodsId, items) {
+        const length = items.length;
+        const _now = new Date().getTime();
+        let arr = items.map(item => {
+            item.id = this.utils.genSnowId(2);
+            item.goodsId = goodsId;
+            item.createTime = _now;
+            item.timestamp = _now;
+            return item;
+        });
+        let result;
+        try{
+            const resp = await this.app.mysql.insert('t_goods_standard', arr);
+            result = resp.affectedRows === length;
+        } catch (e) {
+            switch (e.errno) {
+                case 1452:
+                    result = 'goodsId校验失败';
+                    break;
+                case 1062:
+                    result = '该商品类别已存在';
+                    break;
+                default:
+                    result = e.sqlMessage
+            }
+        } finally {
+            return result
+        }
+    }
+
+    /**
+     * 更改商品规格，（更改价格，库存，title等）
+     * update操作成功返回true，失败返回错误信息
+     * @param id
+     * @param params
+     * @return {Promise<void>}
+     */
+    async standard_update(standardId, params) {
+        const row = Object.assign(params, {
+            id: standardId,
+            timestamp: new Date().getTime(),
+        })
+        let result;
+        try {
+            const res = await this.app.mysql.update('t_goods_standard', row);
+            result = (res.affectedRows === 1);
+        } catch (e) {
+            result = e.sqlMessage
+        } finally {
+            return result;
+        }
+    }
+
+    /**
+     * 根据商品id，查询商品规格
+     * @param goodsId 商品id
+     * @return {Promise<void>}
+     */
+    async getStandards(goodsId) {
+        const rows = await this.app.mysql.select('t_goods_standard', {
+            where: { goodsId: goodsId, alive: true },
+            columns: ['title', 'price', 'inventory', 'imageUrl','createTime'],
+        });
+        return rows;
+    }
 }
 module.exports = goodsService;

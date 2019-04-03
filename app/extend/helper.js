@@ -16,8 +16,10 @@ var appId = 1; //default value 0
 var machineId = 1; //default value 0
 var firstYear = 2019; //default value 1970
 var timestampPrecision = 200; // optional, default value 1000 (ms)
+//订单id雪花算法
 const snowflake = new SnowflakeCodon(appId, machineId, firstYear, timestampPrecision);
-
+//商品规格id雪花算法
+const snowflake_2 = new SnowflakeCodon(2, machineId, firstYear, timestampPrecision);
 module.exports = {
     uuidv1,
     /**
@@ -129,9 +131,17 @@ module.exports = {
      * @author chengjiajun
      * @since 2019/03/31
      */
-    genSnowId() {
+    genSnowId(module) {
         //npm i snowflake-codon
-        return snowflake.nextId();
+        let result;
+        if(module === 2) {
+            //商品类别雪花id
+            result = snowflake_2.nextId();
+        } else {
+            //默认是订单雪花id
+            result = snowflake.nextId();
+        }
+        return result;
     },
 
   // 字符串转对象，转换出错返回{}或者默认值

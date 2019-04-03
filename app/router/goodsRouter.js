@@ -20,4 +20,12 @@ module.exports = app => {
     router.post('/v1/api/goods/search', controller.goods.searchGoods);
     //获取推荐给指定用户的商品列表
     router.post('/v1/api/goods/recommend', controller.goods.goodsRecommend);
+
+/****************pc后台管理端接口*****************/
+    //添加商品类别（批量接口）
+    router.post('/v1/api/goods/standard/add', controller.goods.standardAdd);
+    //删除商品类别（批量接口）
+    router.post('/v1/api/goods/standard/del', controller.goods.standardDel);
+    //更改商品类别
+    router.post('/v1/api/goods/standard/update', controller.goods.standardUpdate);
 };
