@@ -20,6 +20,9 @@ var timestampPrecision = 200; // optional, default value 1000 (ms)
 const snowflake = new SnowflakeCodon(appId, machineId, firstYear, timestampPrecision);
 //商品规格id雪花算法
 const snowflake_2 = new SnowflakeCodon(2, machineId, firstYear, timestampPrecision);
+//ali OSS存储sdk  需要运行cnpm install ali-oss来集成
+const OSS = require('ali-oss');
+let image_bucket = null;
 module.exports = {
     uuidv1,
     /**
@@ -44,6 +47,18 @@ module.exports = {
         }
         return properties[key]
     },
+
+    upload_oss_images() {
+        if(!image_bucket) {
+            image_bucket = new OSS({
+                region: 'oss-cn-hangzhou',
+                accessKeyId: getProperty('OSS_ACCESSKEY_ID'),
+                accessKeySecret: getProperty('OSS_ACCESSKEY_SECRET'),
+                bucket: 'hgnc-goods-images'
+            });
+        }
+
+    }
 
     /**
      * 获得所有的配置项
