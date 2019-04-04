@@ -94,12 +94,12 @@ class GoodsController extends Controller {
      */
     async searchGoods() {
         const { ctx, service } = this;
-        const { title, page, pageSize } = ctx.request.body;
+        const { title, page, pageSize, orderBy } = ctx.request.body;
         if(!title.trim()) {
             this.fail("title is required");
             return;
         }
-        const res = await service.goods.goodsService.searchGoodsByTitle(title, page, pageSize);
+        const res = await service.goods.goodsService.searchGoodsByTitle(title, page, pageSize, orderBy);
         this.success(res);
     }
 

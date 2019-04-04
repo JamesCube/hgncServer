@@ -157,12 +157,12 @@ class goodsService extends Service {
      * @param title
      * @return {Promise<void>}
      */
-    async searchGoodsByTitle(title, page = 1, pageSize = 10) {
+    async searchGoodsByTitle(title, page = 1, pageSize = 10, orderBy = [['createTime','desc']]) {
         //查询count总数量
         const count_sql = `SELECT COUNT(id) FROM t_goods WHERE alive = true AND title LIKE :title`;
         let count_promise = this.app.mysql.query(count_sql, {title:('%'+title+'%')});
         //查询分页后的结果
-        const sql = `SELECT * FROM t_goods WHERE alive = true AND title LIKE :title LIMIT :offset, :limit`;
+        const sql = `SELECT * FROM t_goods WHERE alive = true AND title LIKE :title order by ${orderBy[0][0] +' '+ orderBy[0][1]} LIMIT :offset, :limit`;
         const goods_promise = this.app.mysql.query(sql, {
             title: ('%'+title+'%'),
             offset: ((page - 1) * pageSize),
