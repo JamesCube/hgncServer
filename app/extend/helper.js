@@ -48,17 +48,25 @@ module.exports = {
         return properties[key]
     },
 
-    upload_oss_images() {
+    /**
+     * 获得单例oss实例
+     * @author chengjiajun
+     * @since 2019/04/04
+     * @returns {*}
+     */
+    get_image_bucket() {
         if(!image_bucket) {
+            const keyId = this.getProperty('OSS_ACCESSKEY_ID');
+            const keySecret = this.getProperty('OSS_ACCESSKEY_SECRET');
             image_bucket = new OSS({
                 region: 'oss-cn-hangzhou',
-                accessKeyId: getProperty('OSS_ACCESSKEY_ID'),
-                accessKeySecret: getProperty('OSS_ACCESSKEY_SECRET'),
-                bucket: 'hgnc-goods-images'
+                accessKeyId: keyId,
+                accessKeySecret: keySecret,
+                bucket: 'hgnc-goods-images',
             });
         }
-
-    }
+        return image_bucket
+    },
 
     /**
      * 获得所有的配置项
@@ -122,7 +130,7 @@ module.exports = {
         }
     },
 
-    Enum:{
+    Enum: {
         ORDER_STATUS: {
             // "0"为待付款，
             WAIT_PAY: "0",
@@ -138,7 +146,7 @@ module.exports = {
             CANCEL_BUT_PAY: "n",
             // "a"为已付款订单取消已退款状态
             CANCEL_DONE: "a",
-        }
+        },
     },
 
     /**
@@ -147,7 +155,7 @@ module.exports = {
      * @since 2019/03/31
      */
     genSnowId(module) {
-        //npm i snowflake-codon
+        //cnpm i snowflake-codon
         let result;
         if(module === 2) {
             //商品类别雪花id

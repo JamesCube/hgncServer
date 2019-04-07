@@ -28,4 +28,6 @@ module.exports = app => {
     router.post('/v1/api/goods/standard/del', controller.goods.standardDel);
     //更改商品类别
     router.post('/v1/api/goods/standard/update', controller.goods.standardUpdate);
+    //上传图片
+    router.post('/v1/api/goods/images/upload', controller.goods._uploadImage);
 };

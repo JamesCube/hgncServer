@@ -179,6 +179,23 @@ class GoodsController extends Controller {
         }
     }
 
+    /**
+     * 上传图片
+     */
+    async _uploadImage() {
+        const { ctx, service } = this;
+        const stream = await ctx.getFileStream();
+        const imageName = stream.filename;
+        let res;
+        try {
+            // 异步把文件流 写入
+            res = await service.common.oss.image_stream_upload(imageName, stream);
+            this.success(res);
+        } catch (e) {
+            this.fail(e.message);
+        }
+    }
+
 }
 
 module.exports = GoodsController;
