@@ -36,6 +36,28 @@ class BaseController extends Controller {
         return res
     }
 
+    /**
+     * 根据path删除oss对象,删除成功返回true，删除失败返回false
+     * 批量接口
+     * @return {Promise<void>}
+     */
+    async oss_paths_delete(pathArr) {
+        const { ctx, service } = this;
+        const { paths } = ctx.request.body;
+        const params = paths || pathArr;
+        let result = false;
+        if(!params) {
+            this.fail('path is required');
+            return false;
+        }
+        const res = await service.common.oss.oss_paths_delete(params);
+        if(res.res.status === 200) {
+            result = true;
+            this.success('delete success');
+        }
+        return result;
+    }
+
     notFound(msg) {
         msg = msg || 'not found';
         this.ctx.throw(404, msg);

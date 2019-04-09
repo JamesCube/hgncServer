@@ -24,5 +24,16 @@ class OssService extends Service {
         const res = await this.image_bucket.putStream(path, stream);
         return res;
     }
+
+    /**
+     * 删除path路径文件,批量接口
+     * @since 2019/04/09
+     * @param paths 目标路径数组 array
+     * @returns {Promise<*>}
+     */
+     async oss_paths_delete(paths) {
+        const res = await this.image_bucket.deleteMulti(paths);
+        return res;
+    }
 }
 module.exports = OssService;

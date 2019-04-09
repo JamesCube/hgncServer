@@ -292,6 +292,25 @@ class UserController extends Controller {
         const result = await service.user.userService.valid_secondary_pwd(userId, pwd);
         this.success(result);
     }
+
+    /**
+     * 上传用户头像
+     * @return {Promise<void>}
+     * 方法流程暂未完成
+     */
+    async uploadUserHead() {
+        const { ctx, service } = this;
+        const stream = await ctx.getFileStream();
+        const imageName = stream.filename;
+        let res;
+        try {
+            // 异步把文件流 写入
+            res = await service.common.oss.image_stream_upload(imageName, stream);
+            this.success(res);
+        } catch (e) {
+            this.fail(e.message);
+        }
+    }
 }
 
 module.exports = UserController;

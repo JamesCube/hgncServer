@@ -22,6 +22,10 @@ module.exports = app => {
     router.post('/v1/api/goods/recommend', controller.goods.goodsRecommend);
 
 /****************pc后台管理端接口*****************/
+    //添加商品
+    router.post('/v1/api/goods/add', controller.goods.goodsAdd);
+    //删除商品
+    router.post('/v1/api/goods/del', controller.goods.goodsDelete);
     //添加商品类别（批量接口）
     router.post('/v1/api/goods/standard/add', controller.goods.standardAdd);
     //删除商品类别（批量接口）
@@ -30,4 +34,6 @@ module.exports = app => {
     router.post('/v1/api/goods/standard/update', controller.goods.standardUpdate);
     //上传图片
     router.post('/v1/api/goods/images/upload', controller.goods._uploadImage);
+    //删除oss图片(批量接口)
+    router.post('/v1/api/goods/images/del', controller.goods.oss_paths_delete);
 };

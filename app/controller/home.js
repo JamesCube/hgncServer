@@ -23,7 +23,12 @@ class HomeController extends Controller {
     async getCusConfig() {
         const { ctx } = this;
         const config = ctx.helper.getAllProperty();
-        this.success(config);
+        //自定义config里不是所有的参数前台都需要，敏感参数项无需返回前台，这里组装下参数
+        const result = {};
+        result.SMS_TIMEOUT = config.SMS_TIMEOUT;
+        result.DEFAULT_GOODS_POINTRATE = config.DEFAULT_GOODS_POINTRATE;
+        result.DEFAULT_IMAGE_DOMAIN = config.DEFAULT_IMAGE_DOMAIN;
+        this.success(result);
     }
 
     async reloadConfigs() {

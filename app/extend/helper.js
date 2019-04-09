@@ -20,6 +20,8 @@ var timestampPrecision = 200; // optional, default value 1000 (ms)
 const snowflake = new SnowflakeCodon(appId, machineId, firstYear, timestampPrecision);
 //商品规格id雪花算法
 const snowflake_2 = new SnowflakeCodon(2, machineId, firstYear, timestampPrecision);
+//商品规格id雪花算法
+const snowflake_goods = new SnowflakeCodon(3, machineId, firstYear, timestampPrecision);
 //ali OSS存储sdk  需要运行cnpm install ali-oss来集成
 const OSS = require('ali-oss');
 let image_bucket = null;
@@ -160,6 +162,9 @@ module.exports = {
         if(module === 2) {
             //商品类别雪花id
             result = snowflake_2.nextId();
+        } else if(module === 3){
+            //商品雪花id
+            result = snowflake_goods.nextId();
         } else {
             //默认是订单雪花id
             result = snowflake.nextId();

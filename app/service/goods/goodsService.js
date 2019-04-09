@@ -12,15 +12,15 @@ class goodsService extends Service {
     }
 
     /**
-     * 新建商品,成功返回新建条数1，错误返回具体的错误信息
+     * 新建商品,成功返回true，错误返回具体的错误信息
      * 需要接受参数type，description,price,imageUrl,detail
-     * @param params,
+     * @param params
      * @returns {boolean}
      */
     async create(params) {
         const _now = new Date().getTime();
+        if(!params.id)  params.id = this.utils.genSnowId(3);
         const p = Object.assign(params, {
-            id: this.utils.uuidv1(),
             createTime: _now,
             timestamp: _now,
             alive: true,

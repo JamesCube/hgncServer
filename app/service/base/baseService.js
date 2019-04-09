@@ -24,6 +24,25 @@ class baseService extends Service {
     }
 
     /**
+     * 根据表id更新数据行,update成功返回true错误返回具体错误信息
+     * @param tableName
+     * @param row
+     * @return {Promise<*|boolean>}
+     */
+    async updateRow(tableName, row) {
+        row.timestamp = new Date().getTime();
+        let result = true;
+        try {
+            const res = await this.app.mysql.update(tableName, row);
+            result = res.affectedRows === 1;
+        } catch (e) {
+            result = e.sqlMessage;
+        } finally {
+            return result
+        }
+    }
+
+    /**
      * 更改某张表，某指定主键数据行的alive字段的值
      * @param tableName 表名
      * @param id的值,或ids数组array
