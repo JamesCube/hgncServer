@@ -17,7 +17,7 @@ class goodsService extends Service {
      * @param params,
      * @returns {boolean}
      */
-    async addCart(userId, goodsId) {
+    async addCart(userId, goodsId, goodsNum = 1, standardId = '') {
         //先查询此用户的购物车中有没有该商品
         const rows = await this.app.mysql.select('t_cart', {
             where: { userId: userId, goodsId: goodsId },
@@ -33,7 +33,8 @@ class goodsService extends Service {
             //若之前已经加入购物车则重复加入购物车时商品数量加1
             const row = {
                 id: id,
-                num: (num+1),
+                num: (num + goodsNum),
+                standardId: standardId,
                 timestamp: new Date().getTime(),
             };
             try{
@@ -48,7 +49,8 @@ class goodsService extends Service {
                 id: this.utils.uuidv1(),
                 userId: userId,
                 goodsId: goodsId,
-                num: 1,
+                standardId: standardId,
+                num: goodsNum,
                 createTime: _now,
                 timestamp: _now,
             };

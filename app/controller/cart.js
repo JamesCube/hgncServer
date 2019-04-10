@@ -12,13 +12,13 @@ class CartController extends Controller {
      */
     async addCart() {
         const { ctx, service } = this;
-        const { userId, goodsId } = ctx.request.body;
+        const { userId, goodsId, num, standardId } = ctx.request.body;
         //入参校验
         if(!userId || !goodsId) {
             this.fail("userId and goodsId is required");
             return;
         }
-        const res = await service.cart.cartService.addCart(userId, goodsId);
+        const res = await service.cart.cartService.addCart(userId, goodsId, num, standardId);
         if (res.affectedRows === 1) {
             this.success("add cart success");
         } else {

@@ -263,7 +263,7 @@ class goodsService extends Service {
     async getStandards(goodsId) {
         const rows = await this.app.mysql.select('t_goods_standard', {
             where: { goodsId: goodsId, alive: true },
-            columns: ['title', 'price', 'inventory', 'imageUrl','createTime'],
+            columns: ['id', 'title', 'price', 'inventory', 'imageUrl','createTime'],
         });
         return rows;
     }
