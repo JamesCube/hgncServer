@@ -20,7 +20,7 @@ class goodsService extends Service {
     async addCart(userId, goodsId, goodsNum = 1, standardId = '') {
         //先查询此用户的购物车中有没有该商品
         const rows = await this.app.mysql.select('t_cart', {
-            where: { userId: userId, goodsId: goodsId },
+            where: { userId: userId, goodsId: goodsId, standardId: standardId },
             columns: ['id', 'num'],
         });
         let num = 0;
