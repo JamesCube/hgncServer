@@ -47,19 +47,19 @@ class CartController extends Controller {
     /**
      * 删除购物车中的某几个商品
      * @param userId 用户id
-     * @param goodsIds [array]商品id的数组,当且仅当此参数为undefined时清空购物下所有商品（不传此参数，或故意传入该参数的值为undefined）
+     * @param ids 购物车数据行的id数组，注意为真删除，当ids为空时，清空用户所有购物车商品
      * @return {Promise<void>}
      */
     async deleteCart() {
         const { ctx, service } = this;
-        const { userId, goodsIds } = ctx.request.body;
+        const { userId, ids } = ctx.request.body;
         //入参校验
         if(!userId) {
             this.fail("userId is required");
             return;
         }
-        if(goodsIds && Array.isArray(goodsIds) && goodsIds.length > 0) {
-            const res = await service.cart.cartService.deleteCart(userId, goodsIds);
+        if(ids && Array.isArray(ids) && ids.length > 0) {
+            const res = await service.cart.cartService.deleteCart(userId, ids);
             //必须使用全等于true
             if(res === true) {
                 this.success("delete success")
@@ -68,7 +68,7 @@ class CartController extends Controller {
             }
             return;
         }
-        if(goodsIds === undefined) {
+        if(ids === undefined) {
             const res = await service.cart.cartService.clearCart(userId);
             //必须使用全等于true
             if(res === true) {

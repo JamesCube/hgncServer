@@ -87,15 +87,15 @@ class goodsService extends Service {
     /**
      * 批量删除用户购物车下的某几个商品
      * @param userId 用户id
-     * @param goodsIds [array] 商品id的数组
+     * @param ids [array] 购物车数据行id
      * @return {boolean} sql执行成功返回true，失败返回具体错误信息
      */
-    async deleteCart(userId, goodsIds) {
+    async deleteCart(userId, ids) {
         let result;
         try{
             await this.app.mysql.delete('t_cart', {
                 userId: userId,
-                goodsId: goodsIds,
+                id: ids,
             });
             result = true
         } catch (e) {
