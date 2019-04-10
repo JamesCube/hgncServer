@@ -136,5 +136,43 @@ class goodsService extends Service {
         return result;
     }
 
+    /**
+     * 查询订单价格,不支持批量
+     * @param orderId
+     * @return {Promise<void>}
+     */
+    async getOrderPrice(orderId) {
+        const rows = await this.app.mysql.select('t_order', {
+            where: { id: orderId },
+        });
+        let result = 0;
+        if(rows.length > 0) {
+            for(let row of rows) {
+                result += row.price;
+            }
+        }
+        return result;
+    }
+
+    /**
+     * 查询订单可以获得的积分,不支持批量订单查询
+     * 实时接口，按照当前积分率来换算
+     * @param orderId
+     * @return {Promise<void>}
+     */
+    async getOrderPoint(orderId) {
+        const rows = await this.app.mysql.select('v_order', {
+            where: { id: orderId },
+        });
+        let result = 0;
+        if(rows.length > 0) {
+            const default_rate = this.utils.getProperty("DEFAULT_GOODS_POINTRATE");
+            for(let row of rows) {
+                result += (row.price * (row.pointRate ===0 ? default_rate : row.pointRate));
+            }
+        }
+        return Math.round(result);
+    }
+
 }
 module.exports = goodsService;

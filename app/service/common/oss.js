@@ -34,6 +34,6 @@ class OssService extends Service {
      async oss_paths_delete(paths) {
         const res = await this.image_bucket.deleteMulti(paths);
         return res;
-    }
+     }
 }
 module.exports = OssService;

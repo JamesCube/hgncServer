@@ -12,6 +12,8 @@ module.exports = app => {
     router.post('/v1/api/order/create', controller.order.createOrder);
     //根据用户id，分页查询我的订单详情
     router.post('/v1/api/order/list', controller.order.orderList);
+    //根据订单id数组，批量查询订单详情
+    router.post('/v1/api/order/ids', controller.order.getOrdersByIds);
     //删除订单信息
     router.post('/v1/api/order/delete', controller.order.deleteOrders);
     //支付成功后的回调

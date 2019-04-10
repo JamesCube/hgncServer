@@ -230,6 +230,13 @@ class GoodsController extends Controller {
         return result;
     }
 
+    /**
+     * 解析formData的值，文件就直接上传，参数值则存储到params中返回
+     * 返回数据结构强定制，私有方法，其他地方谨慎复用
+     * @param paths
+     * @return {Promise<*[]>}
+     * @private
+     */
     async _multipartAnalyse(paths) {
         const { ctx, service } = this;
         //const stream = await ctx.getFileStream();
@@ -241,12 +248,12 @@ class GoodsController extends Controller {
             detailImages: [],
         }
         //商品字段详情
-        const params = {}
+        const params = {};
         while ((file = await files()) != null) {
             if (file.length) {
                 // 官方解释为 arrays are busboy fields，实际上通俗应理解为非文件流自定义字段参数
                 //file 作为一个数组 有4个item，分别对用field，value，valueTruncated，fieldnameTruncated
-                params[file[0]] = file[1]
+                params[file[0]] = file[1];
             } else {
                 const fileName = file.filename;
                 if (!fileName) {
@@ -262,6 +269,7 @@ class GoodsController extends Controller {
                 try {
                     const res = await service.common.oss.image_stream_upload(paths + fileName, file);
                     if(res.res.status === 200) {
+                        //上传成功的图片名，放到result中返回，后续需要更新goods商品数据行
                         result[fieldName].push(fileName);
                     }
                 } catch (e) {
@@ -273,35 +281,18 @@ class GoodsController extends Controller {
     }
 
     /**
-     * arr里的item数据结构为{name: filename, file:FileStream}
-     * 空arr不会执行上传操作，直接返回空字符串
-     * 上传成功会返回上传成功的文件名，多文件以‘;’拼接
-     * @param arr
-     * @return {Promise<void>}
-     * @private
-     */
-    async __uploadItems(service, path, arr) {
-        let result = ''
-        if(arr.length > 0) {
-            const fileNameArr = []
-            for(let item of arr) {
-                try {
-                    const res = await service.common.oss.image_stream_upload(paths + item.name, item.file);
-                    if(res.res.status === 200) {
-                        fileNameArr.push(item.name);
-                    }
-                } catch (e) {
-                    console.log(e);
-                }
-            }
-            result = fileNameArr.join(';')
-        }
-        return result;
-    }
-
-    /**
      * 添加商品，整合了商品图片的上传功能
-     * 使用header头传参
+     * 使用formData传参 前台Content-Type 应该设置为 multipart/form-data
+     * 由于stream流机制，解析到的流不上传无法关闭，故先上传图片，再新增数据行，若商品数据行新增失败，则需要删除上传成功的图片
+     * @param title
+     * @param type
+     * @param price
+     * @param standardTitle
+     * @param pointRate
+     * @param detail
+     * @param flowImages
+     * @param detailImages
+     * @param titleImage
      * @return {Promise<void>}
      */
     async goodsAdd() {
@@ -314,13 +305,13 @@ class GoodsController extends Controller {
         params.id = goodsId;
         const res = await service.goods.goodsService.create(params);
         if(res === true) {
-            //新增goods数据行成功后，上传文件
+            //图片处理成功后，新增goods数据行
             const row = {
                 id: goodsId,
                 imageUrl: files.titleImage.join(';'),
                 flowImages: files.flowImages.join(';'),
                 detailImages: files.detailImages.join(';'),
-            }
+            };
             const updateRes = await service.goods.goodsService.updateRow('t_goods', row);
             if(updateRes === true) {
                 this.success('create goods success');
@@ -332,40 +323,9 @@ class GoodsController extends Controller {
             const names = [...files.titleImage, ...files.flowImages, ...files.detailImages];
             const paths = names.map(name => `goods/${goodsId}/${name}`);
             this.oss_paths_delete(paths);
+            this.log("goodsAdd", 'admin', goodsId, '上传图片操作:oss冗余文件夹');
             this.fail(res);
         }
-        //插入goods行数据
-        //const { params } = ctx.request.body;
-        /*const headers = ctx.request.headers;
-        //组装参数
-        const params = {};
-        const goodsId = ctx.helper.genSnowId(3);
-        params.id = goodsId;
-        params.type = headers.type;
-        params.title = decodeURIComponent(headers.title);
-        params.price = headers.price;
-        params.standardTitle = decodeURIComponent(headers.standardtitle);
-        params.pointRate = headers.pointrate;
-        params.detail = decodeURIComponent(headers.detail);
-        const res = await service.goods.goodsService.create(params);
-        if(res === true) {
-            //新增goods数据行成功后，上传文件
-            const { title, flow, detail } = await this._uploadImage(`goods/${goodsId}/`);
-            const row = {
-                id: goodsId,
-                imageUrl: title.join(';'),
-                flowImages: flow.join(';'),
-                detailImages: detail.join(';'),
-            }
-            const updateRes = await service.goods.goodsService.updateRow('t_goods', row);
-            if(updateRes === true) {
-                this.success('create goods success');
-            } else {
-                this.success('create goods success,but no images stored');
-            }
-        } else {
-            this.fail(res);
-        }*/
     }
 
 

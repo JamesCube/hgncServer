@@ -206,5 +206,26 @@ class UserService extends Service {
         const row = await this.app.mysql.get('t_user', { id: userId, alive: true });
         return row;
     }
+
+    /**
+     * 在原来的基础上增量更新用户积分
+     * @param userId
+     * @param comPoint 需要增加的积分，减也行（传负数就是减）
+     * 更新成功返回true，无此用户数据行返回false，报错返回具体报错信息
+     */
+    async incremental_update_comPoint(userId, comPoint = 0) {
+        const row = this._getUserById(userId);
+        let result = false;
+        if(row) {
+            const newPoint =  row.comPoint + comPoint
+            const params = {
+                id: row.id,
+                comPoint: newPoint,
+            }
+            result = this.updateRow('t_user', params);
+        }
+        return result;
+    }
+
 }
 module.exports = UserService;
