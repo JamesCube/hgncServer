@@ -28,6 +28,7 @@ class HomeController extends Controller {
         result.SMS_TIMEOUT = config.SMS_TIMEOUT;
         result.DEFAULT_GOODS_POINTRATE = config.DEFAULT_GOODS_POINTRATE;
         result.DEFAULT_IMAGE_DOMAIN = config.DEFAULT_IMAGE_DOMAIN;
+        result.ORDER_PAY_TIMEOUT = config.ORDER_PAY_TIMEOUT;
         this.success(result);
     }
 

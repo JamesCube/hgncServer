@@ -29,12 +29,24 @@ class goodsService extends Service {
             item.timestamp = _now;
             return item;
         })
-        let result;
+        let result = {
+            res: true,
+            msg: orderId
+        };
         try{
             const resp = await this.app.mysql.insert('t_order', arr);
-            result = resp.affectedRows === length;
+            if(resp.affectedRows !== length) {
+                this.log('orderCreate', userId, userId, `订单号${orderId}应生成${length}行数据，实际生成${resp.affectedRows}行`);
+                result = {
+                    res: false,
+                    msg: `订单号${orderId}应生成${length}行数据，实际生成${resp.affectedRows}行`,
+                };
+            }
         } catch (e) {
-            result = e.sqlMessage
+            result = {
+                res: false,
+                msg: e.sqlMessage,
+            };
         } finally {
             return result
         }

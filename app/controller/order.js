@@ -23,10 +23,10 @@ class OrderController extends Controller {
             return;
         }
         const res = await service.order.orderService.orderCreate(userId, addressId, goods);
-        if (res === true) {
-            this.success("create order success");
+        if (res.res === true) {
+            this.success(res.msg);
         } else {
-            this.fail(res);
+            this.fail(res.msg);
         }
     }
 
@@ -161,6 +161,14 @@ class OrderController extends Controller {
             return;
         }
         const rows = await service.user.userService.getByIds('t_order', ids);
+        if(rows > 0) {
+            for(let row of rows) {
+                if(row.status === helper.Enum.ORDER_STATUS.WAIT_PAY) {
+                    //如果订单状态是待支付，需要返回前台剩余时间，前台判断是否订单超时未支付
+                    row.remainTime = new Date().getTime() - row.createTime
+                }
+            }
+        }
         this.success(rows);
     }
 }
