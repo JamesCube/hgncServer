@@ -22,6 +22,8 @@ module.exports = app => {
     router.post('/v1/api/goods/recommend', controller.goods.goodsRecommend);
 
 /****************pc后台管理端接口*****************/
+    //商品列表(注意这是admin接口)
+    router.post('/v1/api/goods/list', controller.goods.adminList);
     //添加商品
     router.post('/v1/api/goods/add', controller.goods.goodsAdd);
     //删除商品

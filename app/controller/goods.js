@@ -67,6 +67,19 @@ class GoodsController extends Controller {
     }
 
     /**
+     * 获取商品id的数组批量查询商品详情列表
+     * @param ids 商品id的数组
+     * @returns {Promise<void>}
+     */
+    async adminList() {
+        const { ctx, service } = this;
+        const { type, page, pageSize, orderBy } = ctx.request.body;
+        //类型为选填字段
+        const res = await service.goods.goodsService.goods_page_list(type, page, pageSize, orderBy);
+        this.success(res)
+    }
+
+    /**
      * 根据商品类型分页查询商品详情
      * @param type 商品类新
      * @param page 页码
