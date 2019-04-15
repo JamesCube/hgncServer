@@ -30,7 +30,13 @@ class UserService extends Service {
             const resp = await this.app.mysql.insert('t_user', p);
             result = resp.affectedRows === 1;
         } catch (e) {
-            result = e.sqlMessage
+            result = e.sqlMessage;
+            //如果邀请码重复会返回  Duplicate entry 'cUXXgJ' for key 't_user_inviteCode_uindex'
+            if(e.errno === 1062 && result.indexOf('t_user_inviteCode_uindex') !== -1) {
+                this.log('insertOne','system','system',`自动生成的邀请码重复:${p.inviteCode}`);
+                //换一个邀请码重新插入（递归）
+                result = await this.insertOne(params);
+            }
         } finally {
             return result
         }

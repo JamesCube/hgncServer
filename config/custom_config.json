@@ -8,11 +8,27 @@
     "RONGSMS_APP_ID":"8a216da86904c06001693d8e9fd918e3",
     "RONGSMS_TEMPLATE_ID":"415927",
     "SMS_TIMEOUT": 5,
+    //默认商品消费积分倍率
     "DEFAULT_GOODS_POINTRATE": 2.0,
     "DEFAULT_GOODS_RECOMMEND": ["1120025","1121565","1146848","1148041","1160069","1165574"],
+    //图片拼接域名
     "DEFAULT_IMAGE_DOMAIN":"images.maiyidesan.cn",
-    "DEFAULT_POINT_DUMPRATE":0.01,
+    //全局默认积分衰减率
+    "DEFAULT_POINT_DUMPRATE": 0.01,
+    //经理佣金率
+    "MANAGER_COMMISSION": 0.0704,
+    //总监佣金率
+    "DIRECTOR_COMMISSION": 0.0352,
+    //总代佣金率
+    "AGENT_COMMISSION": 0.0352,
+    //经理指导佣金率
+    "GUIDE_MANAGER_COMMISSION": 0.0128,
+    //总监指导佣金率
+    "GUIDE_MANAGER_COMMISSION": 0.0064,
+
+    //VIP消费阈值
     "VIP_THRESHOLD": 500,
+    //订单超时时间，默认30分钟
     "ORDER_PAY_TIMEOUT": 30,
 
     "OSS_ACCESSKEY_ID": "LTAI5ErwjZusLhM0",
