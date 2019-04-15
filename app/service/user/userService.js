@@ -227,5 +227,34 @@ class UserService extends Service {
         return result;
     }
 
+    /**
+     * 在原来的基础上增量更新用户消费额
+     * @param userId
+     * @param comPoint 需要增加的消费额
+     * 更新成功返回true，无此用户数据行返回false，报错返回具体报错信息
+     */
+    async incremental_update_cost(userId, cost = 0) {
+        const row = this._getUserById(userId);
+        let result = false;
+        let newCost = 0;
+        if(row) {
+            newCost =  row.cost + cost;
+            const params = {
+                id: row.id,
+                cost: newCost,
+            }
+            //判断用户角色看是否需要根据总消费额更新用户角色
+            if(row.role === this.utils.Enum.USER_ROLE.COMMON) {
+                //如果是普通会员且，且消费额大于额度阈值，提升会员为VIP角色
+                const vip_threshold = this.utils.getProperty("VIP_THRESHOLD") || 0;
+                if(newCost > vip_threshold) {
+                    params.role = this.utils.Enum.USER_ROLE.VIP;
+                }
+            }
+            result = this.updateRow('t_user', params);
+        }
+        return result;
+    }
+
 }
 module.exports = UserService;

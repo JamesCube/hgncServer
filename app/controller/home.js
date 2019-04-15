@@ -29,6 +29,7 @@ class HomeController extends Controller {
         result.DEFAULT_GOODS_POINTRATE = config.DEFAULT_GOODS_POINTRATE;
         result.DEFAULT_IMAGE_DOMAIN = config.DEFAULT_IMAGE_DOMAIN;
         result.ORDER_PAY_TIMEOUT = config.ORDER_PAY_TIMEOUT;
+        result.VIP_THRESHOLD = config.VIP_THRESHOLD;
         this.success(result);
     }
 

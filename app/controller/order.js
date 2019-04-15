@@ -140,6 +140,10 @@ class OrderController extends Controller {
                     //增量更新积分信息
                     service.user.userService.incremental_update_comPoint(current_order_userId, point);
                 }
+                //增量更新用户总消费额
+                if(order.price > 0) {
+                    service.user.userService.incremental_update_cost(current_order_userId, order.price);
+                }
             } else {
                 this.fail(res);
             }

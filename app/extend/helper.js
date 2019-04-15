@@ -149,6 +149,18 @@ module.exports = {
             // "a"为已付款订单取消已退款状态
             CANCEL_DONE: "a",
         },
+        USER_ROLE: {
+            //普通会员
+            COMMON: 0,
+            //Vip会员
+            VIP: 1,
+            //经理
+            MANAGER: 2,
+            //总监
+            DIRECTOR: 3,
+            //总代
+            AGENT: 4,
+        }
     },
 
     /**
