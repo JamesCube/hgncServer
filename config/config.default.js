@@ -1,6 +1,7 @@
 /* eslint valid-jsdoc: "off" */
 
 'use strict';
+const path = require('path');
 
 /**
  * @param {Egg.EggAppInfo} appInfo app info
@@ -70,12 +71,20 @@ module.exports = appInfo => {
             sessionName: 'csrfToken', // Session 中的字段名，默认为 csrfToken
             headerName: 'x-csrf-token', // 通过 header 传递 CSRF token 的默认字段为 x-csrf-token
         }
-    }
+    };
 
   // add your user config here
   const userConfig = {
      myAppName: 'hgncServer',
   };
+
+  //日志文件达到20M的时候切割文件
+    config.logrotator = {
+        filesRotateBySize: [
+            path.join(appInfo.root, 'logs', appInfo.name, 'egg-web.log'),
+        ],
+        maxFileSize: 20 * 1024 * 1024,
+    };
 
   return {
     ...config,

@@ -16,7 +16,8 @@ class UserController extends Controller {
         let res = await service.user.userService.validLogin(phoneNum, pwd);
         //当登录成功时，res为user数据行，当登录失败时，返回false
         if(res) {
-            this.log("login", phoneNum, phoneNum, '用户登录');
+            //this.log("login", phoneNum, phoneNum, '用户登录');
+            this.ctx.logger.info(`用户${phoneNum}登录`);
             ctx.session.user = JSON.stringify(res);
             this.success(res)
         } else {
