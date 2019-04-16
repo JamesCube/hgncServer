@@ -137,7 +137,7 @@ class OrderController extends Controller {
                     point = Math.round(point);
                 }
                 if(point !== 0) {
-                    //增量更新积分信息
+                    //增量更新积分信息(不一定是更新自己的积分，为普通用户时更新推荐人积分)
                     service.user.userService.incremental_update_comPoint(current_order_userId, point);
                 }
                 //增量更新用户总消费额

@@ -204,31 +204,44 @@ class UserService extends Service {
 
     /**
      * 根据id获取user数据行
-     * @param userId
+     * @param val 默认为userId
      * @return {Promise<*>}
      * @private
      */
-    async _getUserById(userId) {
-        const row = await this.app.mysql.get('t_user', { id: userId, alive: true });
+    async _getUserById(val, key = 'id') {
+        const row = await this.app.mysql.get('t_user', { [key]: val, alive: true });
         return row;
     }
 
     /**
      * 在原来的基础上增量更新用户积分
-     * @param userId
+     * @param userId 用户id
      * @param comPoint 需要增加的积分，减也行（传负数就是减）
      * 更新成功返回true，无此用户数据行返回false，报错返回具体报错信息
      */
     async incremental_update_comPoint(userId, comPoint = 0) {
         const row = this._getUserById(userId);
         let result = false;
+        //原积分，用于日志记录的变量
+        let beforePoint = row.comPoint;
         if(row) {
-            const newPoint =  row.comPoint + comPoint
+            const newPoint =  row.comPoint + comPoint;
             const params = {
                 id: row.id,
                 comPoint: newPoint,
             }
+            if(row.role === this.utils.USER_ROLE.COMMON) {
+                //没有升级为VIP之前消费产生的积分给自己的推荐人
+                const parentRow = this._getUserById(row.parentCode, 'inviteCode');
+                beforePoint = parentRow.comPoint;
+                params.id = parentRow.id;
+                params.comPoint = parentRow.comPoint + comPoint;
+            }
             result = this.updateRow('t_user', params);
+            if(result === true) {
+                //记录日志信息,记录了积分变更详情
+                this.log('incremental_update_comPoint', row.id, params.id, `${beforePoint}=>${params.comPoint}`);
+            }
         }
         return result;
     }
