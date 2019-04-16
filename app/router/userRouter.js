@@ -30,4 +30,8 @@ module.exports = app => {
     router.post('/v1/api/user/forgetSecondaryPwd', controller.user.forgetSecondaryPwd);
     //校验二级密码
     router.post('/v1/api/user/validSecondaryPwd', controller.user.validSecondaryPwd);
+    //转移专用积分
+    router.post('/v1/api/user/transferGold', controller.user.goldTransfer);
+    //查询今日释放积分
+    router.post('/v1/api/user/releaseGold', controller.user.getReleaseGold);
 };

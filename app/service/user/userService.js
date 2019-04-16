@@ -275,5 +275,66 @@ class UserService extends Service {
         return result;
     }
 
+    /**
+     * 转出专用积分给别人
+     * @param fromUser
+     * @param toUser
+     * @param count
+     * @return {Promise<boolean>}
+     */
+    async gold_transfer(fromUser, toUser, count) {
+        let result = true;
+        // 初始化手动事务操作
+        const conn = await this.app.mysql.beginTransaction();
+        try{
+            const res1 = await conn.update('t_user', { id: fromUser.id, gold: (fromUser.gold - count) });
+            const res2 = await conn.update('t_user', { id: toUser.id, gold: (toUser.gold + count) });
+            if(res1.affectedRows === 1 && res2.affectedRows === 1) {
+                //提交事务
+                await conn.commit();
+            }
+        } catch (e) {
+            //发生异常回滚事务操作
+            await conn.rollback();
+            result = e.sqlMessage
+        } finally {
+            return result
+        }
+    }
+
+    /**
+     * 获得当天的专用积分转化数量
+     * @param userId
+     * @return {Promise<{status: boolean, msg: string}>}
+     */
+    async getReleaseGoldToday(userId) {
+        let today = new Date();
+        today.setHours(0);
+        today.setMinutes(0);
+        today.setSeconds(0);
+        today.setMilliseconds(0);
+        const fromTime = today.getTime();
+        today.setHours(24);
+        const toTime = today.getTime();
+        //已服务器时间为准计算今天专用积分的释放情况
+        const sql = `SELECT description FROM t_log WHERE type = 'auto_dumpRate_calc' AND influencer = '${userId}' and createTime BETWEEN ${fromTime} and ${toTime}`;
+        const result = {
+            status: true,
+            msg:'0'
+        };
+        try {
+            const resArr = await this.app.mysql.query(sql);
+            if(resArr.length > 0) {
+                result.status = true;
+                result.msg = ((resArr[0].description).split(':')[1]);
+            }
+        } catch (e) {
+            result.status = false;
+            result.msg = e.sqlMessage;
+        } finally {
+            return result;
+        }
+    }
+
 }
 module.exports = UserService;

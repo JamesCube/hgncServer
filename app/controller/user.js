@@ -312,6 +312,77 @@ class UserController extends Controller {
             this.fail(e.message);
         }
     }
+
+    /**
+     * 转移专用积分，从某个账户转出转入到另一个账户
+     * @param from
+     * @param to
+     * @param count
+     * @return {Promise<void>}
+     */
+    async goldTransfer() {
+        const { ctx, service } = this;
+        const { from, to, count } = ctx.request.body;
+        if(!from || !to.trim()) {
+            //入参校验
+            this.fail('from who?');
+            return
+        }
+        if(!to || !to.trim()) {
+            //入参校验
+            this.fail('to who?');
+            return
+        }
+        if(to.trim() === from.trim()) {
+            //入参校验
+            this.fail('自己不可以转让给自己！');
+            return
+        }
+        const fromRow = await service.user.userService._getUserById(from, 'inviteCode');
+        const toRow = await service.user.userService._getUserById(to, 'inviteCode');
+        if(!fromRow) {
+            this.fail('from user is not alive');
+            return
+        }
+        if(!toRow) {
+            this.fail('to user is not alive');
+            return
+        }
+        //转出方余额
+        const fromBalance = fromRow.gold - (count || 0);
+        if(fromBalance < 0) {
+            this.fail('转出数额不能超过账户余额');
+            return
+        }
+        const res = await service.user.userService.gold_transfer(fromRow, toRow, count);
+        if(res === true) {
+            this.log('goldTransfer', from, to, count);
+            this.success('transfer success');
+        } else {
+            this.fail(res);
+        }
+    }
+
+    /**
+     * 查询指定用户今日释放积分情况
+     * @param userId 用户id
+     * @return {Promise<void>}
+     */
+    async getReleaseGold() {
+        const { ctx, service } = this;
+        const { userId } = ctx.request.body;
+        if(!userId) {
+            //入参校验
+            this.fail('userId is required');
+            return
+        }
+        const res = await service.user.userService.getReleaseGoldToday(userId);
+        if(res.status) {
+            this.success(res.msg);
+        } else {
+            this.fail(res.msg)
+        }
+    }
 }
 
 module.exports = UserController;
