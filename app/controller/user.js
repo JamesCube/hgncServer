@@ -315,6 +315,7 @@ class UserController extends Controller {
 
     /**
      * 转移专用积分，从某个账户转出转入到另一个账户
+     * 在service层会记录积分转移日志
      * @param from
      * @param to
      * @param count
@@ -356,7 +357,6 @@ class UserController extends Controller {
         }
         const res = await service.user.userService.gold_transfer(fromRow, toRow, count);
         if(res === true) {
-            this.log('goldTransfer', from, to, count);
             this.success('transfer success');
         } else {
             this.fail(res);
@@ -382,6 +382,33 @@ class UserController extends Controller {
         } else {
             this.fail(res.msg)
         }
+    }
+
+    /**
+     * 查询积分/专用积分 历史列表（支持分页）
+     * @param userId 用户id
+     * @param isCom 是否要查普通积分标识位，默认为true
+     * @param page 第几页
+     * @param pageSize 每页条数
+     * @param start 开始时间
+     * @param end 结束时间
+     * @param orderBy 排序规则
+     * @return {Promise<void>}
+     */
+    async getPointHistory() {
+        const { ctx, service } = this;
+        const { userId, isCom , page, pageSize, start, end, orderBy } = ctx.request.body;
+        if(!userId) {
+            //入参校验
+            this.fail('userId is required');
+            return
+        }
+        if(start >= end) {
+            this.fail('endTime cannot be less than startTime');
+            return
+        }
+        const res = await service.user.userService.point_page_list(isCom, page, pageSize, userId, start, end, orderBy);
+        this.success(res)
     }
 }
 

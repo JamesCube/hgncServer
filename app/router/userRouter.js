@@ -34,4 +34,6 @@ module.exports = app => {
     router.post('/v1/api/user/transferGold', controller.user.goldTransfer);
     //查询今日释放积分
     router.post('/v1/api/user/releaseGold', controller.user.getReleaseGold);
+    //查询积分/专用积分 历史列表（支持分页）
+    router.post('/v1/api/user/pointHistory', controller.user.getPointHistory);
 };

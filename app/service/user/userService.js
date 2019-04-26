@@ -298,6 +298,11 @@ class UserService extends Service {
             await conn.rollback();
             result = e.sqlMessage
         } finally {
+            if(result === true) {
+                //记录业务日志行
+                this.log('goldTransfer', toUser.id, fromUser.id, `${fromUser.gold}=>${fromUser.gold - count}`);
+                this.log('goldTransfer', fromUser.id, toUser.id, `${toUser.gold}=>${toUser.gold + count}`);
+            }
             return result
         }
     }
@@ -334,6 +339,56 @@ class UserService extends Service {
         } finally {
             return result;
         }
+    }
+
+    /**
+     * 查询积分/专用积分 历史列表（支持分页）
+     * @return {Promise<void>}
+     */
+    async point_page_list(isCom = true, page = 1, pageSize = 10, userId, start, end, orderBy = [['createTime','desc']]) {
+        //查询总条数
+        let promise_getPointNum = this._getPointNum(isCom, userId, start, end);
+        //查询分页数据
+        let _orderBy = '';
+        orderBy.forEach(function (v, i) {
+            _orderBy += ((i===0 ? '' : ',') + v.join(' '))
+        })
+        const sql = isCom ? `SELECT * FROM t_log WHERE influencer = :userId AND type in ('incremental_update_comPoint') AND createTime BETWEEN :startTime and :endTime ORDER BY ${_orderBy} LIMIT :offset, :limit` :
+            `SELECT * FROM t_log WHERE influencer = :userId AND type in ('auto_dumpRate_calc', 'goldTransfer') AND createTime BETWEEN :startTime and :endTime ORDER BY ${_orderBy} LIMIT :offset, :limit`
+        let promise_getPoint = this.app.mysql.query(sql, {
+            startTime: start,
+            endTime: end,
+            offset: ((page - 1) * pageSize),
+            limit: pageSize,
+            userId: userId,
+        });
+        let res = await Promise.all([promise_getPointNum, promise_getPoint]).then(resArr => {
+            const result = {
+                total: resArr[0],
+                page: page,
+                pageSize: pageSize,
+                data: resArr[1],
+            }
+            return result;
+        })
+        return res
+    }
+
+    /**
+     * 获得不分页情况下的积分历史数据行总数
+     * @return {Promise<*>}
+     * @private
+     */
+    async _getPointNum(isCom = true, userId , start, end) {
+        const sql = isCom ?
+            `SELECT COUNT(id) FROM t_log WHERE influencer=:userId AND type in ('incremental_update_comPoint') AND createTime BETWEEN :startTime and :endTime` :
+            `SELECT COUNT(id) FROM t_log WHERE influencer=:userId AND type in ('auto_dumpRate_calc', 'goldTransfer') AND createTime BETWEEN :startTime and :endTime`
+        const res = await this.app.mysql.query(sql, {
+            startTime: start,
+            endTime: end,
+            userId: userId,
+        });
+        return res[0]["COUNT(id)"]
     }
 
 }
