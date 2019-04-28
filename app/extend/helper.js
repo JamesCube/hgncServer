@@ -5,6 +5,7 @@ const uuidv1 = require('uuid/v1');
 const path = require('path');
 //文件模块
 const fs = require('fs');
+const os = require('os');
 //自定义配置文件的相对路径
 const custom_config_url = '../../config/custom_config.json';
 //是否已经加载过配置文件，默认为false
@@ -40,8 +41,10 @@ module.exports = {
             const file = path.join(__dirname, custom_config_url);
             try {
                 const result = fs.readFileSync(file, 'utf-8');
+                //过滤掉json文件中以//开头的注释行
+                const filterArr = result.split(os.EOL).filter(row => !this.app._.startsWith(row.trim(), '//'))
                 loaded = true;
-                properties = JSON.parse(result);
+                properties = JSON.parse(filterArr.join(""));
             } catch(e) {
                 loaded = false;
                 this.ctx.logger.error(new Error('读取自定义配置文件失败'));
