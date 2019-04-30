@@ -17,7 +17,11 @@ module.exports = appInfo => {
   config.keys = appInfo.name + '_1550799737434_3265';
 
   // add your middleware config here
-  config.middleware = [];
+  config.middleware = ['cusJwt'];
+  config.cusJwt = {
+      // 不执行中间件的url白名单
+      whiteUrls: ['/v1/api/user/signUp', '/v1/api/user/logout', '/v1/api/user/login', '/v1/api/sms/sendSms'],
+  };
 
   //当用户 Session 的有效期仅剩下最大有效期一半的时候，重置 Session 的有效期
   config.session = {
@@ -71,6 +75,11 @@ module.exports = appInfo => {
             sessionName: 'csrfToken', // Session 中的字段名，默认为 csrfToken
             headerName: 'x-csrf-token', // 通过 header 传递 CSRF token 的默认字段为 x-csrf-token
         }
+    };
+
+    config.jwt = {
+        //jwt private key
+        secret: "fpY8Jwu24k5ew1E#",
     };
 
   // add your user config here

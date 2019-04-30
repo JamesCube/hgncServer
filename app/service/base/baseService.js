@@ -13,12 +13,25 @@ class baseService extends Service {
 
     /**
      * 根据id的数组，批量查询指定表名的数据行数据
+     * @Deprecated 过时方法 不推荐使用
      * @param ids
      * @returns {Promise<void>}
      */
     async getByIds(tableName, ids) {
         const rows = await this.app.mysql.select(tableName, {
             where: { id: ids },
+        });
+        return rows;
+    }
+
+    /**
+     * 根据id的数组，批量查询指定表名的数据行数据
+     * @param ids
+     * @returns {Promise<void>}
+     */
+    async getRows(tableName, ids, key="id") {
+        const rows = await this.app.mysql.select(tableName, {
+            where: { [key]: ids },
         });
         return rows;
     }

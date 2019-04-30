@@ -16,13 +16,42 @@ class UserController extends Controller {
         let res = await service.user.userService.validLogin(phoneNum, pwd);
         //当登录成功时，res为user数据行，当登录失败时，返回false
         if(res) {
+            //gen token
+            const token = ctx.app.jwt.sign({
+                id: res.id,
+                phone: res.phone,
+                inviteCode: res.inviteCode,
+            }, ctx.app.config.jwt.secret, {expiresIn: '240h'});
+            //token放入redis中
+            ctx.app.redis.set(`token_${res.id}`, token);
             //this.log("login", phoneNum, phoneNum, '用户登录');
             this.ctx.logger.info(`用户${phoneNum}登录`);
             ctx.session.user = JSON.stringify(res);
-            this.success(res)
+            this.success({
+                token: token,
+                user: res,
+            })
         } else {
             this.fail("用户名或密码不正确")
         }
+    }
+
+    /**
+     * app用户登出
+     * @param phoneNum
+     * @param pwd
+     * @returns {Promise<void>}
+     */
+    async logout() {
+        const { ctx } = this;
+        const { userId } = ctx.request.body;
+        if(!userId) {
+            //入参校验
+            this.fail('userId is required');
+            return
+        }
+        await ctx.app.redis.del(`token_${userId}`);
+        this.success(`logout success`)
     }
 
     /**
@@ -409,6 +438,57 @@ class UserController extends Controller {
         }
         const res = await service.user.userService.point_page_list(isCom, page, pageSize, userId, start, end, orderBy);
         this.success(res)
+    }
+
+    /**
+     * 根据角色，获取我的团队成员列表
+     * @param userId 用户id
+     * @return {Promise<void>}
+     */
+    async getGroupMembers() {
+        const { ctx, service } = this;
+        const { userId } = ctx.request.body;
+        if(!userId) {
+            //入参校验
+            this.fail('userId is required');
+            return
+        }
+        const userRow = await service.user.userService._getUserById(userId);
+        if(!userRow) {
+            //入参校验
+            this.fail('invalid userId');
+            return
+        }
+        const userRole = userRow.role;
+        const shortId = userRow.inviteCode;
+        const myInvited = await service.user.userService.getRows("t_user", shortId, "parentCode");
+        let result = [];
+        switch (userRole) {
+            case this.utils.Enum.USER_ROLE.VIP:
+                //VIP
+                result = myInvited;
+                break;
+            case this.utils.Enum.USER_ROLE.MANAGER:
+                //经理
+                if(myInvited.length > 0) {
+                    const parentCodeArr =  myInvited.map(item => item.inviteCode);
+                    const res = await service.user.userService.getRows("t_user", parentCodeArr, "parentCode");
+                    result = [...res, ...myInvited];
+                }
+                break;
+            case this.utils.Enum.USER_ROLE.DIRECTOR:
+                //总监
+                result = myInvited;
+                break;
+            case this.utils.Enum.USER_ROLE.AGENT:
+                //总代
+                result = myInvited;
+                break;
+            default:
+                this.fail('user role invalid');
+                return
+        }
+        this.success(result);
     }
 }
 

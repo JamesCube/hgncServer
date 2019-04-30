@@ -7,11 +7,15 @@
  * @param {Egg.Application} app - egg application
  */
 module.exports = app => {
+    //const { router, controller, jwt } = app;
     const { router, controller } = app;
+    //const cus_jwt = app.middleware.cusJwt;
     //注册
     router.post('/v1/api/user/signUp', controller.user.signUp);
     //登录
     router.post('/v1/api/user/login', controller.user.login);
+    //登出
+    router.post('/v1/api/user/logout', controller.user.logout);
     //管理员登录
     router.post('/v1/api/user/adminLogin', controller.user.adminLogin);
     //发送手机验证码
@@ -36,4 +40,6 @@ module.exports = app => {
     router.post('/v1/api/user/releaseGold', controller.user.getReleaseGold);
     //查询积分/专用积分 历史列表（支持分页）
     router.post('/v1/api/user/pointHistory', controller.user.getPointHistory);
+    //根据不同角色，获取我的团队成员列表
+    router.post('/v1/api/user/groupMembers', controller.user.getGroupMembers);
 };
