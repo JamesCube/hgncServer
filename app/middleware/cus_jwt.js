@@ -37,6 +37,23 @@ module.exports = (options, app) => {
                 return;
             }
         } catch (e) {
+            //e.name === "TokenExpiredError" 说明超时了
+            if(e.name === "TokenExpiredError") {
+                const userInfo = app.jwt.decode(token);
+                const redisToken = await app.redis.get(`token_${userInfo.id}`);
+                if(!redisToken) {
+                    //redisToken不存在，用户已登出或redis策略已清空token数据
+                    _forbidden(ctx, 'redis token timeout, please relogin');
+                    return;
+                }
+                if(token === redisToken) {
+                    //redisToken是最新的
+                    _forbidden(ctx, 'token timeout');
+                } else {
+                    _forbidden(ctx, 'not latest token;token timeout');
+                }
+                return;
+            }
             //很明显token格式不正确，伪造了token
             _forbidden(ctx, 'token invalid');
             return;

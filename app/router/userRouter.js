@@ -10,6 +10,8 @@ module.exports = app => {
     //const { router, controller, jwt } = app;
     const { router, controller } = app;
     //const cus_jwt = app.middleware.cusJwt;
+    //刷新token
+    router.post('/v1/api/user/refleshToken', controller.user.refleshToken);
     //注册
     router.post('/v1/api/user/signUp', controller.user.signUp);
     //登录

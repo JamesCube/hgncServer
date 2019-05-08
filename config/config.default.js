@@ -20,7 +20,7 @@ module.exports = appInfo => {
   config.middleware = ['cusJwt'];
   config.cusJwt = {
       // 不执行中间件的url白名单
-      whiteUrls: ['/v1/api/user/signUp', '/v1/api/user/logout', '/v1/api/user/login', '/v1/api/sms/sendSms'],
+      whiteUrls: ['/v1/api/user/signUp', '/v1/api/user/logout', '/v1/api/user/login', '/v1/api/sms/sendSms', '/v1/api/user/refleshToken'],
   };
 
   //当用户 Session 的有效期仅剩下最大有效期一半的时候，重置 Session 的有效期
@@ -80,6 +80,8 @@ module.exports = appInfo => {
     config.jwt = {
         //jwt private key
         secret: "fpY8Jwu24k5ew1E#",
+        //custom timeout seconds(default as a half hour)
+        timeout: 1800,
     };
 
   // add your user config here

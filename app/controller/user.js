@@ -17,13 +17,15 @@ class UserController extends Controller {
         //当登录成功时，res为user数据行，当登录失败时，返回false
         if(res) {
             //gen token
+            const {secret, timeout} = ctx.app.config.jwt;
             const token = ctx.app.jwt.sign({
                 id: res.id,
                 phone: res.phone,
                 inviteCode: res.inviteCode,
-            }, ctx.app.config.jwt.secret, {expiresIn: '240h'});
+            }, secret, {expiresIn: timeout});
             //token放入redis中
-            ctx.app.redis.set(`token_${res.id}`, token);
+            const expire = ctx.helper.getProperty('REDIS_TOKEN_TIMEOUT');
+            await ctx.app.redis.set(`token_${res.id}`, token, 'EX', expire);
             //this.log("login", phoneNum, phoneNum, '用户登录');
             this.ctx.logger.info(`用户${phoneNum}登录`);
             ctx.session.user = JSON.stringify(res);
@@ -489,6 +491,53 @@ class UserController extends Controller {
                 return
         }
         this.success(result);
+    }
+
+    /**
+     * 拿旧的超时的token更换新的token
+     * @return {Promise<void>}
+     */
+    async refleshToken() {
+        const { ctx, service } = this;
+        const token =ctx.headers.authorization;
+        if(!token.trim()) {
+            //入参校验
+            this.fail('token is required');
+            return
+        }
+        try {
+            const userInfo = ctx.app.jwt.decode(token);
+            const redisToken = await ctx.app.redis.get(`token_${userInfo.id}`);
+            if(token === redisToken) {
+                //校验token是否超时
+                const expireAt = userInfo.exp;
+                if(expireAt*1000 > new Date().getTime()) {
+                    //超时时间大于现在的时间，即意味着该token没有超时
+                    this.fail('healthy token, do not need reflesh');
+                    return;
+                }
+                //redis里是最新的token可以更换token
+                //gen new token
+                const {secret, timeout} = ctx.app.config.jwt;
+                const token = ctx.app.jwt.sign({
+                    id: userInfo.id,
+                    phone: userInfo.phone,
+                    inviteCode: userInfo.inviteCode,
+                }, secret, {expiresIn: timeout});
+                //更新redisToken
+                const expire = ctx.helper.getProperty('REDIS_TOKEN_TIMEOUT');
+                await ctx.app.redis.set(`token_${userInfo.id}`, token, 'EX', expire);
+                this.success(token);
+            } else {
+                if(!redisToken) {
+                    this.fail('cannot refleshToken with redis token is null, please relogin');
+                } else {
+                    this.fail('not latest token, cannot reflesh');
+                }
+            }
+        } catch (e) {
+            this.fail('token invalid');
+        }
     }
 }
 
