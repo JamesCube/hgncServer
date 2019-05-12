@@ -69,7 +69,24 @@ class UserController extends Controller {
         //当登录成功时，res为user数据行，当登录失败时，返回false
         if(res) {
             ctx.session.user = JSON.stringify(res);
-            this.success(res)
+            //gen token
+            const {secret, timeout} = ctx.app.config.jwt;
+            const tObj = {
+                id: `pc_${res.id}`,
+                phone: res.phone,
+                inviteCode: res.inviteCode,
+            }
+            const token = ctx.app.jwt.sign(tObj, secret, {expiresIn: timeout});
+            //token放入redis中
+            const expire = ctx.helper.getProperty('REDIS_TOKEN_TIMEOUT');
+            await ctx.app.redis.set(`token_${tObj.id}`, token, 'EX', expire);
+            //this.log("login", name, name, '用户登录');
+            this.ctx.logger.info(`用户${name}登录`);
+            ctx.session.user = JSON.stringify(res);
+            this.success({
+                token: token,
+                user: res,
+            })
         } else {
             this.fail("管理员用户名或密码不正确")
         }

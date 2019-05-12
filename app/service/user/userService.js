@@ -75,7 +75,7 @@ class UserService extends Service {
      */
     async validAdminLogin(name, pwd) {
         let result = false;
-        const row = await this.app.mysql.get('t_user', { phone: name, alive: true, createTime: 0});
+        const row = await this.app.mysql.get('t_user', { phone: name, alive: true, storeOwner: true});
         if(row && (row.pwd === pwd)) {
             result = row;
         }
