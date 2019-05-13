@@ -466,6 +466,7 @@ class UserController extends Controller {
      */
     async getGroupMembers() {
         const { ctx, service } = this;
+        const utils = ctx.helper;
         const { userId } = ctx.request.body;
         if(!userId) {
             //入参校验
@@ -480,14 +481,14 @@ class UserController extends Controller {
         }
         const userRole = userRow.role;
         const shortId = userRow.inviteCode;
-        const myInvited = await service.user.userService.getRows("t_user", shortId, "parentCode");
+        const myInvited = await service.user.userService.getRows("t_user", shortId, "parentCode", ["id", "phone", "role", "createTime", "alive"]);
         let result = [];
         switch (userRole) {
-            case this.utils.Enum.USER_ROLE.VIP:
+            case utils.Enum.USER_ROLE.VIP:
                 //VIP
                 result = myInvited;
                 break;
-            case this.utils.Enum.USER_ROLE.MANAGER:
+            case utils.Enum.USER_ROLE.MANAGER:
                 //经理
                 if(myInvited.length > 0) {
                     const parentCodeArr =  myInvited.map(item => item.inviteCode);
@@ -495,11 +496,11 @@ class UserController extends Controller {
                     result = [...res, ...myInvited];
                 }
                 break;
-            case this.utils.Enum.USER_ROLE.DIRECTOR:
+            case utils.Enum.USER_ROLE.DIRECTOR:
                 //总监
                 result = myInvited;
                 break;
-            case this.utils.Enum.USER_ROLE.AGENT:
+            case utils.Enum.USER_ROLE.AGENT:
                 //总代
                 result = myInvited;
                 break;

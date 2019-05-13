@@ -29,9 +29,10 @@ class baseService extends Service {
      * @param ids
      * @returns {Promise<void>}
      */
-    async getRows(tableName, ids, key="id") {
+    async getRows(tableName, ids, key="id", columns = undefined) {
         const rows = await this.app.mysql.select(tableName, {
             where: { [key]: ids },
+            columns: columns,
         });
         return rows;
     }
