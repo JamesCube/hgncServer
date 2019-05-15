@@ -140,9 +140,11 @@ class OrderController extends Controller {
                     //增量更新积分信息(不一定是更新自己的积分，为普通用户时更新推荐人积分)
                     service.user.userService.incremental_update_comPoint(current_order_userId, point);
                 }
-                //增量更新用户总消费额
+                //增量更新用户总消费额(当普通会员消费总额大于vip阈值的时候会自动提升为vip角色)
                 if(order.price > 0) {
-                    service.user.userService.incremental_update_cost(current_order_userId, order.price);
+                    await service.user.userService.incremental_update_cost(current_order_userId, order.price);
+                    //计算该订单的佣金分成
+                    await service.order.orderService.commissionClear(current_order_userId, order.price);
                 }
             } else {
                 this.fail(res);

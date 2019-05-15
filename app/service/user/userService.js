@@ -276,6 +276,27 @@ class UserService extends Service {
     }
 
     /**
+     * 在原来的基础上增量更新用户余额
+     * @param userId
+     * @param comPoint 需要增加的余额
+     * 更新成功返回true，无此用户数据行返回false，报错返回具体报错信息
+     */
+    async incremental_update_remain(userId, remain = 0) {
+        const row = this._getUserById(userId);
+        let result = false;
+        let newRemain = 0;
+        if(row) {
+            newRemain =  row.remain + remain;
+            const params = {
+                id: row.id,
+                remain: newRemain,
+            }
+            result = this.updateRow('t_user', params);
+        }
+        return result;
+    }
+
+    /**
      * 转出专用积分给别人
      * @param fromUser
      * @param toUser
@@ -389,6 +410,96 @@ class UserService extends Service {
             userId: userId,
         });
         return res[0]["COUNT(id)"]
+    }
+
+    /**
+     * 查询我的佣金分配用户
+     * @param userId
+     * @return {Array}
+     * @return {array}
+     */
+    async _getMyCommissionUsers(userId) {
+        const me = await this._getUserById(userId);
+        const role = me.role;
+        let myParentUsers = [];
+        await this._getParentUsers(me, myParentUsers);
+        let result = [];
+        const managers = myParentUsers.filter(user => user.role === this.utils.Enum.USER_ROLE.MANAGER && user.alive);
+        const directors = myParentUsers.filter(user => user.role === this.utils.Enum.USER_ROLE.DIRECTOR && user.alive);
+        const agents = myParentUsers.filter(user => user.role === this.utils.Enum.USER_ROLE.AGENT && user.alive);
+        switch(role) {
+            case this.utils.Enum.USER_ROLE.COMMON:
+                //我是普通用户,和我是VIP流程一致，这里不写break
+            case this.utils.Enum.USER_ROLE.VIP:
+                //我是VIP
+                //经理业绩佣金，应该给到经理，如果没有经理，则向上给到总监，如果没有总监，则给总代
+                result[0] = managers[0] || directors[0] || agents[0];
+                //经理指导佣金，应该给到经理的指导经理，没有经理的指导经理,则向上给到给总监，如果没有总监，则给总代
+                result[1] = managers[1] || directors[0] || agents[0];
+                //总监业绩佣金，给总监，若没有总监，则给总代
+                result[2] = directors[0] || agents[0];
+                //总监指导佣金，给总监的指导总监或总代
+                result[3] = directors[1] || agents[0];
+                //总代业绩佣金，给总代
+                result[4] = agents[0];
+                break;
+            case this.utils.Enum.USER_ROLE.MANAGER:
+                //我是经理
+                //经理业绩佣金，应该给到经理，我自己就是经理，所以给到自己
+                result[0] = me;
+                //经理指导佣金，应该给到经理的指导经理，没有经理的指导经理,则向上给到给总监，如果没有总监，则给总代
+                result[1] = managers[0] || directors[0] || agents[0];
+                //总监业绩佣金，给总监，若没有总监，则给总代
+                result[2] = directors[0] || agents[0];
+                //总监指导佣金，给总监的指导总监或总代
+                result[3] = directors[1] || agents[0];
+                //总代业绩佣金，给总代
+                result[4] = agents[0];
+                break;
+            case this.utils.Enum.USER_ROLE.DIRECTOR:
+                //我是总监
+                //经理业绩佣金，应该给到经理，没有经理则给到总监（自己就是总监所以给到自己）
+                result[0] = managers[0] || me;
+                //经理指导佣金，应该给到经理的指导经理，没有经理的指导经理,则向上给到给总监(我自己)
+                result[1] = managers[1] || me;
+                //总监业绩佣金，给总监(我自己)，
+                result[2] = me;
+                //总监指导佣金，给总监的指导总监或总代
+                result[3] = directors[0] || agents[0];
+                //总代业绩佣金，给总代
+                result[4] = agents[0];
+                break;
+            case this.utils.Enum.USER_ROLE.AGENT:
+                //总代
+                //都是我的
+                result[0] = result[1] = result[2] = result[3] = result[4] = me;
+                break;
+            default:
+                result = null;
+                return
+        }
+        return result;
+    }
+
+    /**
+     * 查找我的父级节点
+     * @param me {object}
+     * @param arrRes {array}
+     * from me.inviteCode to get my parent
+     * @return 递归查询出自己所有的父级链
+     * @private
+     */
+    async _getParentUsers(me, arrRes) {
+        const myParentCode = me ? me.parentCode : null;
+        if(myParentCode) {
+            //这里没有强制使用alive: true为筛选条件，因为alive为false的情况可能会让节点树断掉
+            const parent = await this.app.mysql.get('t_user', { inviteCode: myParentCode });
+            if(parent) {
+                arrRes.push(parent);
+                //递归查询出自己所有的父级链
+                await this._getParentUsers(parent, arrRes);
+            }
+        }
     }
 
 }

@@ -24,7 +24,7 @@
     //经理指导佣金率
     "GUIDE_MANAGER_COMMISSION": 0.0128,
     //总监指导佣金率
-    "GUIDE_MANAGER_COMMISSION": 0.0064,
+    "GUIDE_DIRECTOR_COMMISSION": 0.0064,
 
     //VIP消费阈值
     "VIP_THRESHOLD": 500,

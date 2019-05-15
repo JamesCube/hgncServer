@@ -186,5 +186,66 @@ class goodsService extends Service {
         return Math.round(result);
     }
 
+    /**
+     * 核心业务，佣金结算逻辑
+     * 操作成功返回true，操作失败返回具体错误信息
+     * @return {Promise<void>}
+     */
+    async commissionClear(userId,  amount) {
+        const userRows = await this.service.user.userService._getMyCommissionUsers(userId);
+        //根据待结算佣金的金额，将佣金分成分为5份
+        const manager = amount * (this.utils.getProperty("MANAGER_COMMISSION") || 0);
+        const director = amount * (this.utils.getProperty("DIRECTOR_COMMISSION") || 0);
+        const agent = amount * (this.utils.getProperty("AGENT_COMMISSION") || 0);
+        const guide_manager = amount * (this.utils.getProperty("GUIDE_MANAGER_COMMISSION") || 0);
+        const guide_director = amount * (this.utils.getProperty("GUIDE_DIRECTOR_COMMISSION") || 0);
+        const params = {}
+        //userId 去重
+        const ids = [...new Set(userRows.map(item => item.id))];
+        ids.forEach( id => {
+            params[id] = 0;
+        });
+        params[userRows[0].id] += manager;
+        params[userRows[1].id] += guide_manager;
+        params[userRows[2].id] += director;
+        params[userRows[3].id] += guide_director;
+        params[userRows[4].id] += agent;
+        const originalRows = await this.getRows('t_user', ids);
+        const paramsArr = [];
+        ids.forEach( id => {
+            const remain = params[id];
+            const originalRow = this.app._.find(originalRows, o => o.id === id);
+            paramsArr.push({id: id, remain: (originalRow.remain + remain).toFixed(3)})
+        });
+        let result;
+        try {
+            const res = await this.app.mysql.updateRows('t_user', paramsArr);
+            result = (res.affectedRows === paramsArr.length);
+            if(result) {
+                //记录日志
+                this.log('commission_manager', userId, userRows[0].id, manager);
+                this.log('commission_guide_manager', userId, userRows[1].id, guide_manager);
+                this.log('commission_director', userId, userRows[2].id, director);
+                this.log('commission_guide_director', userId, userRows[3].id, guide_director);
+                this.log('commission_agent', userId, userRows[4].id, agent);
+            }
+        } catch (e) {
+            result = e.sqlMessage
+        } finally {
+            return result;
+        }
+    }
+
+    /**
+     * 根据id获取user数据行
+     * @param val 默认为userId
+     * @return {Promise<*>}
+     * @private
+     */
+    async _getUserById(val, key = 'id') {
+        const row = await this.app.mysql.get('t_user', { [key]: val, alive: true });
+        return row;
+    }
+
 }
 module.exports = goodsService;
