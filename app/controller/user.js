@@ -557,6 +557,156 @@ class UserController extends Controller {
             this.fail('token invalid');
         }
     }
+
+    /**
+     * 查询我的团队成员数量
+     * @param userId 用户id
+     * @param start 开始时间毫秒数（可选）
+     * @param end 结束时间毫秒数（可选）
+     * 当start，end存在时，查询改时间段内新增的团队成员个数
+     * @return {Promise<void>}
+     */
+    async getMyTeamNum() {
+        const { ctx, service } = this;
+        const { userId, start, end } = ctx.request.body;
+        if(!userId) {
+            //入参校验
+            this.fail('userId is required');
+            return
+        }
+        if((start && !end) || (!start && end)) {
+            this.fail('missing startTime or endTime');
+            return
+        }
+        if(start >= end) {
+            this.fail('endTime cannot be less than startTime');
+            return
+        }
+        const me = await service.user.userService._getUserById(userId);
+        let sons = []
+        await service.user.userService._getSonUsers(me.inviteCode, sons);
+        if(!start && !end) {
+            //开始时间和结束时间都没有，查询我的下级总人数
+            //我的team算上我自己故需要+1
+            this.success(sons.length + 1);
+        } else {
+            //查找时间段内新增的团队人数
+            const sql = `SELECT
+                            id 
+                        FROM t_user
+                        WHERE 
+                            id in (:ids) 
+                        AND createTime BETWEEN :startTime and :endTime`;
+            const res = await this.app.mysql.query(sql, {
+                ids: sons,
+                startTime: start,
+                endTime: end,
+            });
+            this.success(res.length);
+        }
+    }
+
+    /**
+     * 查询我的团队的总成交额业绩
+     * @param userId 用户id
+     * @param start 开始时间毫秒数（可选）
+     * @param end 结束时间毫秒数（可选）
+     * @return {Promise<void>}
+     */
+    async getMyTeamPerformance() {
+        const { ctx, service } = this;
+        const { userId, start, end } = ctx.request.body;
+        if(!userId) {
+            //入参校验
+            this.fail('userId is required');
+            return
+        }
+        if((start && !end) || (!start && end)) {
+            this.fail('missing startTime or endTime');
+            return
+        }
+        if(start >= end) {
+            this.fail('endTime cannot be less than startTime');
+            return
+        }
+        const me = await service.user.userService._getUserById(userId);
+        let result = 0;
+        let sons = []
+        await service.user.userService._getSonUsers(me.inviteCode, sons);
+        if(!start && !end) {
+            //开始时间和结束时间都没有，查询所有时间段的成交额（不以时间做筛选条件）
+            const costArr = await service.user.userService.getRows("t_user", sons, "id", ["cost"]);
+            costArr.forEach(v => {
+                result += v.cost;
+            })
+        } else {
+            //需要按时间条件筛选的情况
+            const sql = `SELECT 
+                            description 
+                        FROM t_log_cost
+                        WHERE 
+                            type = 'user_consumption_add' 
+                        AND influencer in (:ids) 
+                        AND createTime BETWEEN :startTime and :endTime`;
+            const res = await this.app.mysql.query(sql, {
+                ids: sons,
+                startTime: start,
+                endTime: end,
+            });
+            res.forEach(v => {
+                result += parseFloat(v.description);
+            });
+        }
+        this.success(result);
+    }
+
+    /**
+     * 查询某个时间段内我的团队成员新增的普通积分
+     * @param userId 用户id
+     * @param start 开始时间毫秒数（可选）
+     * @param end 结束时间毫秒数（可选）
+     * @return {Promise<void>}
+     * @tips 实际上有t_log和t_log_point都存储了积分变化的日志，type分别为incremental_update_comPoint和user_comPoint_add
+     * incremental_update_comPoint的详情记录了调用incremental_update_comPoint方法后原积分和现有的积分的情况，而user_comPoint_add
+     * 只记录了消费后积分核算增加的积分
+     */
+    async getMyTeamPoint() {
+        const { ctx, service } = this;
+        const { userId, start, end } = ctx.request.body;
+        if(!userId) {
+            //入参校验
+            this.fail('userId is required');
+            return
+        }
+        if((start && !end) || (!start && end)) {
+            this.fail('missing startTime or endTime');
+            return
+        }
+        if(start >= end) {
+            this.fail('endTime cannot be less than startTime');
+            return
+        }
+        const me = await service.user.userService._getUserById(userId);
+        let result = 0;
+        let sons = []
+        await service.user.userService._getSonUsers(me.inviteCode, sons);
+        const sql = `SELECT 
+                            description 
+                        FROM t_log_point
+                        WHERE 
+                            type = 'user_comPoint_add' 
+                        AND influencer in (:ids) 
+                        ${ (start && end) ? "AND createTime BETWEEN :startTime and :endTime" : "" }`;
+        const res = await this.app.mysql.query(sql, (start && end) ? {
+            ids: sons,
+            startTime: start,
+            endTime: end,
+        } : { ids: sons });
+        res.forEach(v => {
+            result += parseFloat(v.description);
+        });
+        this.success(result);
+    }
 }
 
 module.exports = UserController;

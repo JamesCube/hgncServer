@@ -502,5 +502,27 @@ class UserService extends Service {
         }
     }
 
+    /**
+     * 查找我的所有子节点
+     * @param inviteCodes {string || array:string}
+     * @param arrRes {array}
+     * @return 递归查询出自己所有的子节点的用户id
+     * @private
+     */
+    async _getSonUsers(inviteCodes, arrRes) {
+        const sons = await this.app.mysql.select('t_user', {
+            where: { parentCode: inviteCodes },
+            columns: ['id', 'inviteCode'],
+        });
+        const sonCodes = sons.map(son => son.inviteCode);
+        const sonIds = sons.map(son => son.id);
+        if (sonCodes.length > 0) {
+            sonIds.forEach(v => {
+                arrRes.push(v);
+            });
+            await this._getSonUsers(sonCodes, arrRes);
+        }
+    }
+
 }
 module.exports = UserService;

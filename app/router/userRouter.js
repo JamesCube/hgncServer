@@ -44,4 +44,10 @@ module.exports = app => {
     router.post('/v1/api/user/pointHistory', controller.user.getPointHistory);
     //根据不同角色，获取我的团队成员列表
     router.post('/v1/api/user/groupMembers', controller.user.getGroupMembers);
+    //查询我的团队的成员数量,(经理以上角色，查询自己以下的节点数量)
+    router.post('/v1/api/user/myTeamNum', controller.user.getMyTeamNum);
+    //查询我的团队的业绩（可查总业绩，和时间范围内的业绩）
+    router.post('/v1/api/user/myTeamPerformance', controller.user.getMyTeamPerformance);
+    //查询某段时间内新增的团队成员普通积分
+    router.post('/v1/api/user/myTeamPoint', controller.user.getMyTeamPoint);
 };

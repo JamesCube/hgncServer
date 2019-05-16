@@ -138,11 +138,19 @@ class OrderController extends Controller {
                 }
                 if(point !== 0) {
                     //增量更新积分信息(不一定是更新自己的积分，为普通用户时更新推荐人积分)
-                    service.user.userService.incremental_update_comPoint(current_order_userId, point);
+                    const updateComPoint = service.user.userService.incremental_update_comPoint(current_order_userId, point);
+                    if(updateComPoint === true) {
+                        //记录日志
+                        this.log_point("user_comPoint_add", current_order_userId, current_order_userId, point);
+                    }
                 }
                 //增量更新用户总消费额(当普通会员消费总额大于vip阈值的时候会自动提升为vip角色)
                 if(order.price > 0) {
-                    await service.user.userService.incremental_update_cost(current_order_userId, order.price);
+                    const updateCost = await service.user.userService.incremental_update_cost(current_order_userId, order.price);
+                    if(updateCost === true) {
+                        //记录日志
+                        this.log_cost("user_consumption_add", current_order_userId, current_order_userId, order.price);
+                    }
                     //计算该订单的佣金分成
                     await service.order.orderService.commissionClear(current_order_userId, order.price);
                 }

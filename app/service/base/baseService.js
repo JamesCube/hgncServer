@@ -57,6 +57,25 @@ class baseService extends Service {
     }
 
     /**
+     * 根据表id更新数据行,update成功返回true错误返回具体错误信息
+     * @param tableName
+     * @param rows {array} 必须是一个数组
+     * @return {Promise<*|boolean>}
+     */
+    async updateRows(tableName, rows) {
+        //rows.timestamp = new Date().getTime();
+        let result = true;
+        try {
+            const res = await this.app.mysql.updateRows(tableName, rows);
+            result = res.affectedRows === rows.length;
+        } catch (e) {
+            result = e.sqlMessage;
+        } finally {
+            return result
+        }
+    }
+
+    /**
      * 更改某张表，某指定主键数据行的alive字段的值
      * @param tableName 表名
      * @param id的值,或ids数组array
@@ -113,7 +132,7 @@ class baseService extends Service {
      * @param description
      * @return {Promise<*>}
      */
-    async log(type, executor, influencer, description) {
+    async log(type, executor, influencer, description, tableName = "t_log") {
         const _now = new Date().getTime();
         const p = {
             id: this.utils.uuidv1(),
@@ -125,13 +144,29 @@ class baseService extends Service {
         };
         let result;
         try{
-            const resp = await this.app.mysql.insert('t_log', p);
+            const resp = await this.app.mysql.insert(tableName, p);
             result = resp.affectedRows === 1;
         } catch (e) {
             result = e.sqlMessage
         } finally {
             return result
         }
+    }
+
+    /**
+     * 消费相关的日志记录数据
+     * 分表记录
+     */
+    async log_cost(type, executor, influencer, description) {
+        return await this.log(type, executor, influencer, description, "t_log_cost")
+    }
+
+    /**
+     * 普通积分相关的日志记录数据
+     * 分表记录
+     */
+    async log_cost(type, executor, influencer, description) {
+        return await this.log(type, executor, influencer, description, "t_log_point")
     }
 
 }

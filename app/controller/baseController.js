@@ -37,6 +37,26 @@ class BaseController extends Controller {
     }
 
     /**
+     * 消费相关的日志记录数据
+     * 分表记录
+     */
+    async log_cost(type, executor, influencer, description) {
+        const { service } = this;
+        const res = await service.base.baseService.log(type, executor, influencer, description, "t_log_cost");
+        return res
+    }
+
+    /**
+     * 普通积分相关的日志记录数据
+     * 分表记录
+     */
+    async log_point(type, executor, influencer, description) {
+        const { service } = this;
+        const res = await service.base.baseService.log(type, executor, influencer, description, "t_log_point");
+        return res
+    }
+
+    /**
      * 根据path删除oss对象,删除成功返回true，删除失败返回false
      * 批量接口
      * @return {Promise<void>}
