@@ -66,6 +66,24 @@ class UserController extends Controller {
     }
 
     /**
+     * 根据用户id，批量查询用户信息
+     * 批量接口
+     * @param ids 用户id的数组
+     * @return {Promise<void>}
+     */
+    async userInfo() {
+        const { ctx, service } = this;
+        const { ids } = ctx.request.body;
+        //入参校验
+        if(!ids || !Array.isArray(ids) || ids.length === 0) {
+            this.fail("ids is required");
+            return;
+        }
+        let res = await service.user.userService.getRows('t_user', ids);
+        this.success(res);
+    }
+
+    /**
      * 管理员登录
      * @param phoneNum
      * @param pwd
