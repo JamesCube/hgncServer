@@ -22,6 +22,8 @@ module.exports = app => {
     router.post('/v1/api/user/adminLogin', controller.user.adminLogin);
     //管理员登出
     router.post('/v1/api/user/adminLogout', controller.user.logout);
+    //根据token，返回最新的user信息
+    router.post('/v1/api/user/me', controller.user.refleshMe);
     //获取用户详情(批量接口)
     router.post('/v1/api/user/userInfo', controller.user.userInfo);
     //发送手机验证码

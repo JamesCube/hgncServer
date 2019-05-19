@@ -46,15 +46,15 @@ class UserController extends Controller {
      */
     async logout() {
         const { ctx } = this;
-        const { userId } = ctx.request.body;
-        const tokenUserId = ctx.tokenUser ? ctx.tokenUser.id : null;
+        const token =ctx.headers.authorization;
+        const tokenUser = this.app.jwt.decode(token);
+        const tokenUserId = tokenUser ? tokenUser.id : ""
         if(!tokenUserId) {
             //入参校验
-            this.fail('userId is required');
+            this.fail('token invalid');
             return
         }
-        const user_id = tokenUserId || userId;
-        await ctx.app.redis.del(`token_${user_id}`);
+        await ctx.app.redis.del(`token_${tokenUserId}`);
         this.success(`logout success`)
     }
 
@@ -72,8 +72,22 @@ class UserController extends Controller {
             this.fail("ids is required");
             return;
         }
-        let res = await service.user.userService.getRows('t_user', ids);
+        let res = await service.user.userService.getRows('t_user', ids, 'id', ['id', 'userName', 'phone', 'role', 'inviteCode', 'createTime']);
         this.success(res);
+    }
+
+    /**
+     * 根据token，返回最新的user信息
+     * @return {Promise<void>}
+     */
+    async refleshMe() {
+        const { ctx } = this;
+        const tokenUserId = ctx.tokenUser ? ctx.tokenUser.id : '';
+        //tokenUserId和可能是用户id，或pc_前缀的用户id,这里兼容转化为用户id
+        let userId = tokenUserId.length === 39 ? tokenUserId.substring(3) : tokenUserId;
+        //由于已alive: true为条件筛选，这里只能查出存活的用户
+        const me = await service.user.userService._getUserById(userId);
+        this.success(me);
     }
 
     /**
