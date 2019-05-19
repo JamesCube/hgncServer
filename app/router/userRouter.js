@@ -20,6 +20,8 @@ module.exports = app => {
     router.post('/v1/api/user/logout', controller.user.logout);
     //管理员登录
     router.post('/v1/api/user/adminLogin', controller.user.adminLogin);
+    //管理员登录
+    router.post('/v1/api/user/adminLogout', controller.user.adminLogout);
     //发送手机验证码
     router.post('/v1/api/sms/sendSms', controller.user.getSms);
     //修改密码

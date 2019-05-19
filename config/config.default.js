@@ -24,6 +24,7 @@ module.exports = appInfo => {
           , '/v1/api/user/logout'
           , '/v1/api/user/login'
           , '/v1/api/user/adminLogin'
+          , '/v1/api/user/adminLogout'
           , '/v1/api/sms/sendSms'
           , '/v1/api/user/refleshToken'],
   };

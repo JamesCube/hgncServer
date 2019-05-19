@@ -39,12 +39,12 @@ class UserController extends Controller {
     }
 
     /**
-     * app用户登出
+     * 用户登出,默认为app端登出
      * @param phoneNum
      * @param pwd
      * @returns {Promise<void>}
      */
-    async logout() {
+    async logout(type = "") {
         const { ctx } = this;
         const { userId } = ctx.request.body;
         if(!userId) {
@@ -52,8 +52,17 @@ class UserController extends Controller {
             this.fail('userId is required');
             return
         }
-        await ctx.app.redis.del(`token_${userId}`);
+        await ctx.app.redis.del(`token_${type}${userId}`);
         this.success(`logout success`)
+    }
+
+    /**
+     * pc端登出
+     * @param type
+     * @return {Promise<void>}
+     */
+    async adminLogout() {
+        this.logout("pc_");
     }
 
     /**
