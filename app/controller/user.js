@@ -39,30 +39,23 @@ class UserController extends Controller {
     }
 
     /**
-     * 用户登出,默认为app端登出
+     * 用户登出,app和pc共用一个退出登录的接口
      * @param phoneNum
      * @param pwd
      * @returns {Promise<void>}
      */
-    async logout(type = "") {
+    async logout() {
         const { ctx } = this;
         const { userId } = ctx.request.body;
-        if(!userId) {
+        const tokenUserId = ctx.tokenUser ? ctx.tokenUser.id : null;
+        if(!tokenUserId) {
             //入参校验
             this.fail('userId is required');
             return
         }
-        await ctx.app.redis.del(`token_${type}${userId}`);
+        const user_id = tokenUserId || userId;
+        await ctx.app.redis.del(`token_${user_id}`);
         this.success(`logout success`)
-    }
-
-    /**
-     * pc端登出
-     * @param type
-     * @return {Promise<void>}
-     */
-    async adminLogout() {
-        this.logout("pc_");
     }
 
     /**

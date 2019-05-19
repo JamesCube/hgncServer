@@ -17,10 +17,11 @@ module.exports = (options, app) => {
             _forbidden(ctx, 'missing token');
             return;
         }
+        let userInfo;
         try {
-            const decode = app.jwt.verify(token, privateKey);
-            if(decode) {
-                const redisToken = await app.redis.get(`token_${decode.id}`);
+            userInfo = app.jwt.verify(token, privateKey);
+            if(userInfo) {
+                const redisToken = await app.redis.get(`token_${userInfo.id}`);
                 if(!redisToken) {
                     //redisToken不存在，用户已登出或redis策略已清空token数据
                     _forbidden(ctx, 'redis token timeout, please relogin');
@@ -39,7 +40,7 @@ module.exports = (options, app) => {
         } catch (e) {
             //e.name === "TokenExpiredError" 说明超时了
             if(e.name === "TokenExpiredError") {
-                const userInfo = app.jwt.decode(token);
+                userInfo = app.jwt.decode(token);
                 const redisToken = await app.redis.get(`token_${userInfo.id}`);
                 if(!redisToken) {
                     //redisToken不存在，用户已登出或redis策略已清空token数据
@@ -58,6 +59,7 @@ module.exports = (options, app) => {
             _forbidden(ctx, 'token invalid');
             return;
         }
+        ctx.tokenUser = userInfo;
         await next();
     }
 
