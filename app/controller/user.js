@@ -81,12 +81,19 @@ class UserController extends Controller {
      * @return {Promise<void>}
      */
     async refleshMe() {
-        const { ctx } = this;
+        const { ctx, service  } = this;
         const tokenUserId = ctx.tokenUser ? ctx.tokenUser.id : '';
         //tokenUserId和可能是用户id，或pc_前缀的用户id,这里兼容转化为用户id
         let userId = tokenUserId.length === 39 ? tokenUserId.substring(3) : tokenUserId;
         //由于已alive: true为条件筛选，这里只能查出存活的用户
         const me = await service.user.userService._getUserById(userId);
+        if(me) {
+            //删除掉敏感字段信息
+            delete me["pwd"];
+            delete me["secondaryPwd"];
+            delete me["parentCode"];
+            delete me["mentorCode"];
+        }
         this.success(me);
     }
 
