@@ -9,7 +9,7 @@ const { Controller } = require('egg');
  * @author chengjiajun
  */
 class BaseController extends Controller {
-    getUser() {
+    getSessionUser() {
         return this.ctx.session.user;
     }
 
@@ -76,6 +76,19 @@ class BaseController extends Controller {
             this.success('delete success');
         }
         return result;
+    }
+
+    /**
+     * 通过token拿到当前用户的userId
+     * 同步方法 不加async
+     * @return {string}
+     */
+    getUserId() {
+        const { ctx } = this;
+        const tokenUserId = ctx.tokenUser ? ctx.tokenUser.id : '';
+        //tokenUserId和可能是用户id，或pc_前缀的用户id,这里兼容转化为用户id
+        const userId = tokenUserId.length === 39 ? tokenUserId.substring(3) : tokenUserId;
+        return userId;
     }
 
     notFound(msg) {

@@ -154,6 +154,33 @@ class baseService extends Service {
     }
 
     /**
+     * 数据库中记录用户上传的图片
+     * @param userId
+     * @param path
+     * @param type
+     * @return {Promise<*>}
+     */
+    async image_add(userId, path, type = "") {
+        const _now = new Date().getTime();
+        const p = {
+            id: this.utils.uuidv1(),
+            userId: userId,
+            path: path,
+            type: type,
+            createTime: _now,
+        };
+        let result;
+        try{
+            const resp = await this.app.mysql.insert("t_images", p);
+            result = resp.affectedRows === 1;
+        } catch (e) {
+            result = e.sqlMessage
+        } finally {
+            return result
+        }
+    }
+
+    /**
      * 消费相关的日志记录数据
      * 分表记录
      */

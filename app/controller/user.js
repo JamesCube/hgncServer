@@ -522,7 +522,7 @@ class UserController extends Controller {
         }
         const userRole = userRow.role;
         const shortId = userRow.inviteCode;
-        const myInvited = await service.user.userService.getRows("t_user", shortId, "parentCode", ["id", "phone", "role", "createTime", "alive"]);
+        const myInvited = await service.user.userService.getRows("t_user", shortId, "parentCode", ["id", "phone", "role", "inviteCode", "createTime", "alive"]);
         let result = [];
         switch (userRole) {
             case utils.Enum.USER_ROLE.VIP:
@@ -747,6 +747,96 @@ class UserController extends Controller {
             result += parseFloat(v.description);
         });
         this.success(result);
+    }
+
+    /**
+     * 上传我的图片，可批量
+     * formData 表单上传
+     * @return {Promise<void>}
+     */
+    async uploadMyImages() {
+        const { ctx, service  } = this;
+        const tokenUserId = ctx.tokenUser ? ctx.tokenUser.id : '';
+        //tokenUserId和可能是用户id，或pc_前缀的用户id,这里兼容转化为用户id
+        let userId = tokenUserId.length === 39 ? tokenUserId.substring(3) : tokenUserId;
+        const files = ctx.multipart();
+        let file;
+        while ((file = await files()) != null) {
+            if (file.length) {
+                // 官方解释为 arrays are busboy fields，实际上通俗应理解为非文件流自定义字段参数
+                //file 作为一个数组 有4个item，分别对用field，value，valueTruncated，fieldnameTruncated
+                continue;
+            } else {
+                const fileName = file.filename;
+                if (!fileName) {
+                    // user click `upload` before choose a file,
+                    // `part` will be file stream, but `part.filename` is empty
+                    // must handler this, such as log error.
+                    continue;
+                }
+                // otherwise, it's a stream
+                //fieldname为formData的key值
+                const fieldName = file.fieldname;
+                if(fieldName !== 'images') continue;
+                try {
+                    const res = await service.common.oss.image_stream_upload(`users/${userId}/${fileName}`, file);
+                    if(res.res.status === 200) {
+                        //上传成功的图片名，放到result中返回，后续需要更新goods商品数据行
+                        const addImage = await service.user.userService.image_add(userId, fileName);
+                        if(addImage === true) {
+                            this.success("upload success");
+                        } else {
+                            //删掉oss上的图片，保持同步
+                            this.oss_paths_delete([`users/${userId}/${fileName}`]);
+                            this.fail(addImage);
+                        }
+                    }
+                } catch (e) {
+                    this.fail(e.message);
+                }
+            }
+        }
+    }
+
+    /**
+     * 查询我上传的所有的图片
+     * @return {Promise<void>}
+     */
+    async getMyImages() {
+        const { ctx, service  } = this;
+        const tokenUserId = ctx.tokenUser ? ctx.tokenUser.id : '';
+        //tokenUserId和可能是用户id，或pc_前缀的用户id,这里兼容转化为用户id
+        let userId = tokenUserId.length === 39 ? tokenUserId.substring(3) : tokenUserId;
+        const imagesRows = await service.user.userService.getRows("t_images", userId, "userId", ["id", "path", "createTime"]);
+        this.success(imagesRows);
+    }
+
+    /**
+     * 根据图片id数组批量删除我曾今上传的图片
+     * @params ids 图片id的数组，必须传数组否则校验报错
+     * @return {Promise<void>}
+     */
+    async deleteMyImages() {
+        const { ctx, service  } = this;
+        const { ids } = ctx.request.body;
+        if(!ids || !Array.isArray(ids) || ids.length === 0) {
+            this.fail("ids is required");
+            return;
+        }
+        let userId = this.getUserId();
+        const imagesRows = await service.user.userService.getRows("t_images", ids);
+        if(imagesRows.length > 0) {
+            const paths = imagesRows.map(item => `users/${userId}/${item.path}`);
+            const res = await this.oss_paths_delete(paths);
+            if(res === true) {
+                const rowDelete = await service.user.userService.delRows("t_images", "id", ids);
+                if(rowDelete === true) {
+                    this.success("delete success");
+                }
+            }
+        } else {
+            this.fail("invalid ids")
+        }
     }
 }
 
