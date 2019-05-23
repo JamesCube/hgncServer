@@ -78,28 +78,16 @@ class baseService extends Service {
     /**
      * 更改某张表，某指定主键数据行的alive字段的值
      * @param tableName 表名
-     * @param id的值,或ids数组array
-     * @param alive的值
+     * @param ids {array}
+     * @param alive {boolean}
      * @return boolean sql执行成功返回true，失败返回错误信息
      */
     async setAlive(tableName, ids, alive) {
-        const options = {
-            where: {
-                id: ids,
-            },
-        };
-        const row = {
-            timestamp: new Date().getTime(),
-            alive: !!alive,
-        };
-        let result = true;
-        try {
-            result = await this.app.mysql.update(tableName, row, options);
-        } catch (e) {
-            result = e.sqlMessage;
-        } finally {
-            return result
-        }
+        const rows = []
+        ids.forEach( id => {
+            rows.push({id: id, timestamp: new Date().getTime(), alive: !!alive})
+        });
+        return await this.updateRows(tableName, rows);
     }
 
     /**

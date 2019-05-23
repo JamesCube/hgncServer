@@ -115,13 +115,12 @@ class goodsService extends Service {
      * @param type string 商品类型id
      * @return {Promise<void>}
      */
-    async goods_page_list(type, page = 1, pageSize = 10, orderBy = [['createTime','desc']]) {
+    async goods_page_list(options, page = 1, pageSize = 10, orderBy = [['createTime','desc']]) {
         //查询未分页前的数据行总数,若没有type入参则查询所有商品类型
-        let promise_getGoodsNum = this._getGoodsNum(type);
+        let promise_getGoodsNum = this._getGoodsNum(options.type);
         //查询分页数据
-        const _where = type ? { type: type, alive: true } : { alive: true };
         let promise_getGoods = this.app.mysql.select('t_goods', {
-            where: _where,
+            where: options,
             limit: pageSize, // 返回数据量
             orders: orderBy,
             offset: (page - 1) * pageSize, // 数据偏移量
