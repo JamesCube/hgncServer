@@ -358,7 +358,11 @@ class GoodsController extends Controller {
             return;
         }
         const row_update = await service.goods.goodsService.updateRow("t_goods", params);
-        this.success(row_update);
+        if(row_update === true) {
+            this.success(`update success`);
+        } else {
+            this.fail(row_update);
+        }
     }
 
     async _formDataFilter() {
