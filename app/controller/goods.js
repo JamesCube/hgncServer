@@ -406,7 +406,7 @@ class GoodsController extends Controller {
      * @ids 商品id的数组
      * @return {Promise<void>}
      */
-    async goodsDelete(alive = false) {
+    async goodsDelete(reqctx, alive = false) {
         const { ctx, service } = this;
         const { ids } = ctx.request.body;
         if(!ids || !Array.isArray(ids) || ids.length === 0) {
@@ -439,7 +439,7 @@ class GoodsController extends Controller {
      * @return {Promise<void>}
      */
     async recoverGoods() {
-        await this.goodsDelete(true);
+        await this.goodsDelete(null, true);
     }
 
     /**
