@@ -117,7 +117,7 @@ class goodsService extends Service {
      */
     async goods_page_list(options, page = 1, pageSize = 10, orderBy = [['createTime','desc']]) {
         //查询未分页前的数据行总数,若没有type入参则查询所有商品类型
-        let promise_getGoodsNum = this._getGoodsNum(options.type);
+        let promise_getGoodsNum = this._getGoodsNum(options.type, options.alive);
         //查询分页数据
         let promise_getGoods = this.app.mysql.select('t_goods', {
             where: options,
@@ -144,9 +144,9 @@ class goodsService extends Service {
      * @return {Promise<*>}
      * @private
      */
-    async _getGoodsNum(type) {
+    async _getGoodsNum(type, alive = true) {
         //注意这样拼sql可能会产生sql注入，但是考虑到type是一个id不是用户输入的字段，且此方法不直接对外暴露，故这里暂不修改
-        const sql = `SELECT COUNT(id) FROM t_goods WHERE alive = true` + (type ? ` AND TYPE = '${type}'` : ``)
+        const sql = `SELECT COUNT(id) FROM t_goods WHERE alive = ${alive}` + (type ? ` AND TYPE = '${type}'` : ``)
         const res = await this.app.mysql.query(sql);
         return res[0]["COUNT(id)"]
     }
