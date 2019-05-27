@@ -117,24 +117,19 @@ class goodsService extends Service {
      */
     async goods_page_list(options, page = 1, pageSize = 10, orderBy = [['createTime','desc']]) {
         //查询未分页前的数据行总数,若没有type入参则查询所有商品类型
-        let promise_getGoodsNum = this._getGoodsNum(options.type, options.alive);
-        //查询分页数据
-        let promise_getGoods = this.app.mysql.select('t_goods', {
-            where: options,
-            limit: pageSize, // 返回数据量
-            orders: orderBy,
-            offset: (page - 1) * pageSize, // 数据偏移量
-        });
-        let res = await Promise.all([promise_getGoodsNum, promise_getGoods]).then(resArr => {
-            const result = {
-                total: resArr[0],
-                page: page,
-                pageSize: pageSize,
-                data: resArr[1],
-            }
-            return result;
-        })
-        return res
+        let goodsNum = await this._getGoodsNum(options.type, options.alive, options.recycled, options.listing);
+        const pg = this.utils.pagefaultTolerant(goodsNum, page, pageSize);
+        pg.data = []
+        if(pg.total !== 0) {
+            const rows = await this.app.mysql.select('t_goods', {
+                where: options,
+                limit: pg.pageSize, // 返回数据量
+                orders: orderBy,
+                offset: (pg.page - 1) * pg.pageSize, // 数据偏移量
+            });
+            pg.data = rows;
+        }
+        return pg;
     }
 
     /**
@@ -144,9 +139,12 @@ class goodsService extends Service {
      * @return {Promise<*>}
      * @private
      */
-    async _getGoodsNum(type, alive = true) {
+    async _getGoodsNum(type, alive = true, recycled, listing) {
         //注意这样拼sql可能会产生sql注入，但是考虑到type是一个id不是用户输入的字段，且此方法不直接对外暴露，故这里暂不修改
-        const sql = `SELECT COUNT(id) FROM t_goods WHERE alive = ${alive}` + (type ? ` AND TYPE = '${type}'` : ``)
+        const sql = `SELECT COUNT(id) FROM t_goods WHERE alive = ${alive} `+
+            (recycled === undefined ? `` : `and recycled = ${recycled} `)+
+            (listing === undefined ? `` : `and listing = ${listing} `)+
+            (type ? `AND TYPE = '${type}'` : ``)
         const res = await this.app.mysql.query(sql);
         return res[0]["COUNT(id)"]
     }

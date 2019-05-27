@@ -28,8 +28,8 @@ module.exports = app => {
     router.post('/v1/api/goods/add', controller.goods.goodsAdd);
     //编辑商品
     router.post('/v1/api/goods/edit', controller.goods.goodsEdit);
-    //删除商品
-    router.post('/v1/api/goods/del', controller.goods.goodsDelete);
+    //删除商品（放入回收站）
+    router.post('/v1/api/goods/del', controller.goods.setRecycleGoods);
     //添加商品类别（批量接口）
     router.post('/v1/api/goods/standard/add', controller.goods.standardAdd);
     //删除商品类别（批量接口）
@@ -44,6 +44,6 @@ module.exports = app => {
     router.post('/v1/api/goods/recycle/list', controller.goods.getRecycleGoods);
     //恢复被删除的商品（批量）
     router.post('/v1/api/goods/recycle/recover', controller.goods.recoverGoods);
-    //永久删除（真删除）
-    router.post('/v1/api/goods/recycle/clear', controller.goods.clearGoods);
+    //删除回收站中的商品
+    router.post('/v1/api/goods/recycle/clear', controller.goods.goodsDelete);
 };

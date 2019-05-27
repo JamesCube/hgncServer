@@ -74,7 +74,7 @@ class GoodsController extends Controller {
         const { ctx, service } = this;
         const { type, page, pageSize, orderBy } = ctx.request.body;
         //类型为选填字段
-        const options = type ? { type: type, alive: true } : { alive: true };
+        const options = type ? { type: type, recycled: false, alive: true } : { recycled: false, alive: true };
         const res = await service.goods.goodsService.goods_page_list(options, page, pageSize, orderBy);
         this.success(res)
     }
@@ -94,7 +94,7 @@ class GoodsController extends Controller {
             this.fail("type is required");
             return;
         }
-        const options = { type: type, alive: true, listing: true};
+        const options = { type: type, alive: true, listing: true, recycled: false};
         const res = await service.goods.goodsService.goods_page_list(options, page, pageSize, orderBy);
         this.success(res)
     }
@@ -422,14 +422,40 @@ class GoodsController extends Controller {
     }
 
     /**
-     * 回收站功能，查看被删除的商品
+     * 将商品放入回收站
+     * @ids 商品id的数组
+     * @return {Promise<void>}
+     */
+    async setRecycleGoods(recycled = true) {
+        const { ctx, service } = this;
+        const { ids } = ctx.request.body;
+        if(!ids || !Array.isArray(ids) || ids.length === 0) {
+            this.fail("param ids: effective Array type is required");
+            return;
+        }
+        const rows = []
+        ids.forEach( id => {
+            //商品放入回收站时，listing: false，默认下架
+            rows.push({id: id, timestamp: new Date().getTime(), listing: false, recycled: !!recycled})
+        });
+        const res =  await service.goods.goodsService.updateRows("t_goods", rows);
+        if(typeof res === "boolean") {
+            //是true或false，表示sql执行成功，为false时表示包含无效id
+            this.success("operation success");
+        } else {
+            this.fail(res);
+        }
+    }
+
+    /**
+     * 回收站功能，查看被放入回收站的商品(商品还没有被删除)
      * @return {Promise<void>}
      */
     async getRecycleGoods() {
         const { ctx, service } = this;
         const { type, page, pageSize, orderBy } = ctx.request.body;
         //类型为选填字段
-        const options = type ? { type: type, alive: false } : { alive: false };
+        const options = type ? { type: type, recycled: true, alive: true, listing: false } : { recycled: true, alive: true, listing: false };
         const res = await service.goods.goodsService.goods_page_list(options, page, pageSize, orderBy);
         this.success(res)
     }
@@ -439,15 +465,16 @@ class GoodsController extends Controller {
      * @return {Promise<void>}
      */
     async recoverGoods() {
-        await this.goodsDelete(null, true);
+        await this.setRecycleGoods(false);
     }
 
     /**
      * 删除回收站中的商品
      * 真删除
+     * 基于其他表中的外键考虑，不采用真删除的实现方式
      * @return {Promise<void>}
      */
-    async clearGoods() {
+    /*async clearGoods() {
         const { ctx, service } = this;
         const { ids } = ctx.request.body;
         if(!ids || !Array.isArray(ids) || ids.length === 0) {
@@ -477,7 +504,7 @@ class GoodsController extends Controller {
             result = e.sqlMessage;
             this.fail(result);
         }
-    }
+    }*/
 
 }
 

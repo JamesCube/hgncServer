@@ -188,6 +188,29 @@ module.exports = {
         return result;
     },
 
+    /**
+     * 分页容错处理，根据数据总条数，和用户需要查询的条数，返回需要查询的页码范围
+     * @param total {num}
+     * @param page {num}
+     * @param pageSize {num}
+     * @return {{total: *, page: *, pageSize: *}}
+     */
+    pagefaultTolerant(total, page, pageSize) {
+        if(page < 1) page = 1;
+        if(pageSize < 0) pageSize = 10;
+        const result = {
+            total: total,
+            page: page,
+            pageSize: pageSize,
+        }
+        if(total < ((page-1)*pageSize+1)){
+            //页数超过最大，需要返回最后一页
+            const pageCount = Math.ceil(total / pageSize);
+            result.page = pageCount === 0 ? 1 : pageCount;
+        }
+        return result;
+    },
+
   // 字符串转对象，转换出错返回{}或者默认值
       JSONParse(str, defaultResult) {
         try {
