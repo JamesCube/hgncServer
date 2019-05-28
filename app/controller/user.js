@@ -800,16 +800,17 @@ class UserController extends Controller {
     }
 
     /**
-     * 查询我上传的所有的图片
+     * 查询我上传的的图片
      * @return {Promise<void>}
      */
     async getMyImages() {
         const { ctx, service  } = this;
+        const { page, pageSize, orderBy } = ctx.request.body;
         const tokenUserId = ctx.tokenUser ? ctx.tokenUser.id : '';
         //tokenUserId和可能是用户id，或pc_前缀的用户id,这里兼容转化为用户id
         let userId = tokenUserId.length === 39 ? tokenUserId.substring(3) : tokenUserId;
-        const imagesRows = await service.user.userService.getRows("t_images", userId, "userId", ["id", "path", "createTime"]);
-        this.success(imagesRows);
+        const res = await service.user.userService.myPageImages(userId, page, pageSize, orderBy)
+        this.success(res);
     }
 
     /**

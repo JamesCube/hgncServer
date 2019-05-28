@@ -412,7 +412,7 @@ class GoodsController extends Controller {
 
     /**
      * 编辑已经存在的商品
-     * 使用formData传参 前台Content-Type 应该设置为 multipart/form-data
+     * 不再使用formData传参 前台Content-Type 从原来的 multipart/form-data 变更为application/json
      * @return {Promise<void>}
      */
     async goodsEdit() {
@@ -426,23 +426,56 @@ class GoodsController extends Controller {
         const titleImage =  body.titleImage ? body.titleImage : [];
         const detailImages =  body.detailImages ? body.detailImages : [];
         const flowImages =  body.flowImages ? body.flowImages : [];
+        //获取需要更新的图片id
         const ids = [].concat(titleImage, detailImages, flowImages);
-        let imagesArr = await service.user.userService.getRows('t_images', ids, 'id', ['id', 'path']);
+        let imagesArr = []
+        if(ids.length > 0) {
+            //根据图片id查询图片详情
+            imagesArr = await service.user.userService.getRows('t_images', ids, 'id', ['id', 'path']);
+        }
+        //将图片的id和name组装成dict
         const imagesDict = {};
         imagesArr.forEach(v => {
             imagesDict[v.id] = v.path;
         });
-        if(body.titleImage.length > 0) {
-            body.titleImage = titleImage.map(id => imagesDict[id]).join(";");
+        let params = ctx.app._.cloneDeep(body);
+        delete params["titleImage"];
+        delete params["detailImages"];
+        delete params["flowImages"];
+        const goods_row = await this.app.mysql.get('t_goods', { id: body.id});
+        let delArr = []
+        if(Array.isArray(body.titleImage)) {
+            //如果传了titleImage的值不为undefined，则数据行需要更新，处理数据放到待更新的params数据行里，否则不放就不更新
+            params.imageUrl = body.titleImage.length > 0 ? titleImage.map(id => imagesDict[id]).join(";") : "";
+            delArr = delArr.concat(goods_row.imageUrl.split(";"));
         }
-        if(body.detailImages.length > 0) {
-            body.detailImages = detailImages.map(id => imagesDict[id]).join(";");
+        if(Array.isArray(body.detailImages)) {
+            params.detailImages = body.detailImages.length > 0 ? detailImages.map(id => imagesDict[id]).join(";") : "";
+            delArr = delArr.concat(goods_row.detailImages.split(";"));
         }
-        if(body.flowImages.length > 0) {
-            body.flowImages = flowImages.map(id => imagesDict[id]).join(";");
+        if(Array.isArray(body.flowImages)) {
+            params.flowImages = body.flowImages.length > 0 ? flowImages.map(id => imagesDict[id]).join(";") : "";
+            delArr = delArr.concat(goods_row.flowImages.split(";"));
         }
-        const row_update = await service.goods.goodsService.updateRow("t_goods", body);
+        const row_update = await service.goods.goodsService.updateRow("t_goods", params);
         if(row_update === true) {
+            //删除掉原来的商品图片
+            const delpaths = delArr.filter(function (v) {
+                if(v && v.trim()) {
+                    return v.trim();
+                }
+            }).map(v => `goods/${body.id}/${v}`);
+            if(delpaths.length > 0) await this.oss_paths_delete(delpaths);
+            const tokenUserId = ctx.tokenUser ? ctx.tokenUser.id : '';
+            //tokenUserId和可能是用户id，或pc_前缀的用户id,这里兼容转化为用户id
+            let userId = tokenUserId.length === 39 ? tokenUserId.substring(3) : tokenUserId;
+            //oss复制用户图片数据到商品分类处
+            ids.forEach(id => {
+                const imageName = imagesDict[id];
+                if(imageName) {
+                    service.common.oss.oss_paths_copy(`users/${userId}/${imageName}`, `goods/${body.id}/${imageName}`);
+                }
+            });
             this.success(`update success`);
         } else {
             this.fail(row_update);

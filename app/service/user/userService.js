@@ -524,5 +524,30 @@ class UserService extends Service {
         }
     }
 
+    /**
+     * 查询的我上传的图片信息，支持分页
+     * @return {Promise<void>}
+     */
+    async myPageImages(userId, page = 1, pageSize = 10, orderBy = [['createTime','desc']]) {
+        const totalNum = await this.app.mysql.count('t_images', {
+            userId: userId
+        });
+        const pg = this.utils.pagefaultTolerant(totalNum, page, pageSize);
+        const imagesRows = await this.app.mysql.select('t_images', {
+            where: { userId: userId },
+            columns: ["id", "path", "createTime"],
+            limit: pg.pageSize, // 返回数据量
+            orders: orderBy,
+            offset: (pg.page - 1) * pg.pageSize, // 数据偏移量
+        });
+        const result = {
+            total: totalNum,
+            page: pg.page,
+            pageSize: pg.pageSize,
+            data: imagesRows,
+        }
+        return result;
+    }
+
 }
 module.exports = UserService;
