@@ -23,7 +23,18 @@ class OssService extends Service {
      async image_stream_upload(path, stream) {
         const res = await this.image_bucket.putStream(path, stream);
         return res;
-    }
+     }
+
+    /**
+     * 复制路径文件
+     * @param from
+     * @param to
+     * @return {Promise<*>}
+     */
+     async oss_paths_copy(from, to) {
+         const res = await this.image_bucket.copy(to, from);
+         return res;
+     }
 
     /**
      * 删除path路径文件,批量接口

@@ -24,8 +24,10 @@ module.exports = app => {
 /****************pc后台管理端接口*****************/
     //商品列表(注意这是admin接口)
     router.post('/v1/api/goods/list', controller.goods.adminList);
-    //添加商品
+    //添加商品(整合了图片上传功能)
     router.post('/v1/api/goods/add', controller.goods.goodsAdd);
+    //添加商品(绑定用户已经上传的图片)
+    router.post('/v1/api/goods/create', controller.goods.goodsCreate);
     //编辑商品
     router.post('/v1/api/goods/edit', controller.goods.goodsEdit);
     //删除商品（放入回收站）

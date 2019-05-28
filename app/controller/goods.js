@@ -295,6 +295,74 @@ class GoodsController extends Controller {
     }
 
     /**
+     * 添加商品,没有整合图片上传功能
+     * 只能绑定已经上传的图片
+     * @param title
+     * @param type
+     * @param price
+     * @param standardTitle
+     * @param pointRate
+     * @param detail
+     * @param flowImages
+     * @param detailImages
+     * @param titleImage
+     * @return {Promise<void>}
+     */
+    async goodsCreate() {
+        const { ctx, service } = this;
+        const body = ctx.request.body;
+        const tokenUserId = ctx.tokenUser ? ctx.tokenUser.id : '';
+        //tokenUserId和可能是用户id，或pc_前缀的用户id,这里兼容转化为用户id
+        let userId = tokenUserId.length === 39 ? tokenUserId.substring(3) : tokenUserId;
+        if(!body.title) {
+            this.fail("title is required");
+            return;
+        }
+        if(!body.type) {
+            this.fail("type is required");
+            return;
+        }
+        if(!body.price) {
+            this.fail("price is required");
+            return;
+        }
+        const titleImage =  body.titleImage ? body.titleImage : [];
+        const detailImages =  body.detailImages ? body.detailImages : [];
+        const flowImages =  body.flowImages ? body.flowImages : [];
+        const ids = [].concat(titleImage, detailImages, flowImages);
+        let imagesArr = await service.user.userService.getRows('t_images', ids, 'id', ['id', 'path']);
+        const imagesDict = {};
+        imagesArr.forEach(v => {
+            imagesDict[v.id] = v.path;
+        });
+        const goodsId = ctx.helper.genSnowId(3);
+        ids.forEach(id => {
+            const imageName = imagesDict[id];
+            if(imageName) {
+                service.common.oss.oss_paths_copy(`users/${userId}/${imageName}`, `goods/${goodsId}/${imageName}`);
+            }
+        });
+        const params = {
+            id: goodsId,
+            title: body.title,
+            type: body.type,
+            price: body.price,
+            standardTitle: body.standardTitle,
+            pointRate: body.pointRate,
+            detail: body.detail,
+            imageUrl: titleImage.map(id => imagesDict[id]).join(";"),
+            detailImages: detailImages.map(id => imagesDict[id]).join(";"),
+            flowImages: flowImages.map(id => imagesDict[id]).join(";"),
+        }
+        const res = await service.goods.goodsService.create(params);
+        if(res === true) {
+            this.success("operation success");
+        } else {
+            this.fail(res);
+        }
+    }
+
+    /**
      * 添加商品，整合了商品图片的上传功能
      * 使用formData传参 前台Content-Type 应该设置为 multipart/form-data
      * 由于stream流机制，解析到的流不上传无法关闭，故先上传图片，再新增数据行，若商品数据行新增失败，则需要删除上传成功的图片
@@ -348,16 +416,32 @@ class GoodsController extends Controller {
      * @return {Promise<void>}
      */
     async goodsEdit() {
-        const { service } = this;
-        //将formData内容中的字符串字段和文件字段分开
-        const filterRes = await this._formDataFilter();
-        const params = filterRes[0];
+        const { ctx, service } = this;
+        const body = ctx.request.body;
         //const fileDict = filterRes[1];
-        if(!params || !params.id) {
+        if(!body || !body.id) {
             this.fail("goods id is required");
             return;
         }
-        const row_update = await service.goods.goodsService.updateRow("t_goods", params);
+        const titleImage =  body.titleImage ? body.titleImage : [];
+        const detailImages =  body.detailImages ? body.detailImages : [];
+        const flowImages =  body.flowImages ? body.flowImages : [];
+        const ids = [].concat(titleImage, detailImages, flowImages);
+        let imagesArr = await service.user.userService.getRows('t_images', ids, 'id', ['id', 'path']);
+        const imagesDict = {};
+        imagesArr.forEach(v => {
+            imagesDict[v.id] = v.path;
+        });
+        if(body.titleImage.length > 0) {
+            body.titleImage = titleImage.map(id => imagesDict[id]).join(";");
+        }
+        if(body.detailImages.length > 0) {
+            body.detailImages = detailImages.map(id => imagesDict[id]).join(";");
+        }
+        if(body.flowImages.length > 0) {
+            body.flowImages = flowImages.map(id => imagesDict[id]).join(";");
+        }
+        const row_update = await service.goods.goodsService.updateRow("t_goods", body);
         if(row_update === true) {
             this.success(`update success`);
         } else {

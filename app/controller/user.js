@@ -779,15 +779,16 @@ class UserController extends Controller {
                 const fieldName = file.fieldname;
                 if(fieldName !== 'images') continue;
                 try {
-                    const res = await service.common.oss.image_stream_upload(`users/${userId}/${fileName}`, file);
+                    const time = new Date().getTime();
+                    const res = await service.common.oss.image_stream_upload(`users/${userId}/${time}_${fileName}`, file);
                     if(res.res.status === 200) {
                         //上传成功的图片名，放到result中返回，后续需要更新goods商品数据行
-                        const addImage = await service.user.userService.image_add(userId, fileName);
+                        const addImage = await service.user.userService.image_add(userId, `${time}_${fileName}`);
                         if(addImage === true) {
                             this.success("upload success");
                         } else {
                             //删掉oss上的图片，保持同步
-                            this.oss_paths_delete([`users/${userId}/${fileName}`]);
+                            this.oss_paths_delete([`users/${userId}/${time}_${fileName}`]);
                             this.fail(addImage);
                         }
                     }
