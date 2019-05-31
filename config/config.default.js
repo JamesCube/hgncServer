@@ -80,7 +80,13 @@ module.exports = appInfo => {
             cookieName: 'csrfToken', // Cookie 中的字段名，默认为 csrfToken
             sessionName: 'csrfToken', // Session 中的字段名，默认为 csrfToken
             headerName: 'x-csrf-token', // 通过 header 传递 CSRF token 的默认字段为 x-csrf-token
-        }
+        },
+        domainWhiteList: ['http://127.0.0.1:8888', 'http://yapi.maiyidesan.cn:3000']
+    };
+    config.cors = {
+        //origin:'*',
+        credentials: true,
+        allowMethods: 'GET,HEAD,PUT,POST,OPTIONS'
     };
 
     config.jwt = {
