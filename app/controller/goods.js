@@ -318,8 +318,8 @@ class GoodsController extends Controller {
             this.fail("title is required");
             return;
         }
-        if(!body.type) {
-            this.fail("type is required");
+        if(!body.type || !Array.isArray(body.type) || body.type.length === 0) {
+            this.fail("param type: effective Array type is required");
             return;
         }
         if(!body.price) {
@@ -345,7 +345,7 @@ class GoodsController extends Controller {
         const params = {
             id: goodsId,
             title: body.title,
-            type: body.type,
+            type: body.type.join(";"),
             price: body.price,
             standardTitle: body.standardTitle,
             pointRate: body.pointRate,

@@ -25,6 +25,11 @@ module.exports = appInfo => {
           , '/v1/api/user/login'
           , '/v1/api/user/adminLogin'
           , '/v1/api/user/adminLogout'
+          , '/v1/api/goods/topClass'
+          , '/v1/api/goods/secondClass'
+          , '/v1/api/goods/goodsList'
+          , '/v1/api/goods/goodsPageList'
+          , '/v1/api/goods/recommend'
           , '/v1/api/sms/sendSms'
           , '/v1/api/user/refleshToken'],
   };
