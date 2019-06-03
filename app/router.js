@@ -18,4 +18,6 @@ module.exports = app => {
     require('./router/addressRouter')(app);
     //订单管理路由
     require('./router/orderRouter')(app);
+    //品牌管理路由
+    require('./router/brandRouter')(app);
 };
