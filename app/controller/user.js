@@ -24,7 +24,7 @@ class UserController extends Controller {
                 inviteCode: res.inviteCode,
             }, secret, {expiresIn: timeout});
             //token放入redis中
-            const expire = ctx.helper.getProperty('REDIS_TOKEN_TIMEOUT');
+            const expire = ctx.helper.getProperty('APP_REDIS_TOKEN_TIMEOUT');
             await ctx.app.redis.set(`token_${res.id}`, token, 'EX', expire);
             //this.log("login", phoneNum, phoneNum, '用户登录');
             this.ctx.logger.info(`用户${phoneNum}登录`);
@@ -119,7 +119,7 @@ class UserController extends Controller {
             }
             const token = ctx.app.jwt.sign(tObj, secret, {expiresIn: timeout});
             //token放入redis中
-            const expire = ctx.helper.getProperty('REDIS_TOKEN_TIMEOUT');
+            const expire = ctx.helper.getProperty('PC_REDIS_TOKEN_TIMEOUT');
             await ctx.app.redis.set(`token_${tObj.id}`, token, 'EX', expire);
             //this.log("login", name, name, '用户登录');
             this.ctx.logger.info(`用户${name}登录`);
@@ -584,7 +584,9 @@ class UserController extends Controller {
                     inviteCode: userInfo.inviteCode,
                 }, secret, {expiresIn: timeout});
                 //更新redisToken
-                const expire = ctx.helper.getProperty('REDIS_TOKEN_TIMEOUT');
+                const tokenKey = userInfo.id.length === 39 ? 'PC_REDIS_TOKEN_TIMEOUT' : 'APP_REDIS_TOKEN_TIMEOUT';
+                //pc端和app端，redis token超时的时间不一样，应该分别区分
+                const expire = ctx.helper.getProperty(tokenKey);
                 await ctx.app.redis.set(`token_${userInfo.id}`, token, 'EX', expire);
                 this.success(token);
             } else {

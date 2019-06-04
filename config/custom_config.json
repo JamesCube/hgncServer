@@ -30,8 +30,10 @@
     "VIP_THRESHOLD": 500,
     //订单超时时间，默认30分钟
     "ORDER_PAY_TIMEOUT": 30,
-    //连续多长时间(秒)没有操作，客户端需要从新登陆，默认10天
-    "REDIS_TOKEN_TIMEOUT": 864000,
+    //连续多长时间(秒)没有操作，APP端需要从新登陆，默认10天
+    "APP_REDIS_TOKEN_TIMEOUT": 864000,
+    //连续多长时间(秒)没有操作，PC端需要从新登陆，默认30分钟
+    "PC_REDIS_TOKEN_TIMEOUT": 1800,
     "OSS_ACCESSKEY_ID": "LTAI5ErwjZusLhM0",
     "OSS_ACCESSKEY_SECRET": "65Bjj2emhmB9OB0JkYYruPZeH9Fxf6"
 }

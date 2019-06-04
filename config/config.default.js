@@ -97,8 +97,8 @@ module.exports = appInfo => {
     config.jwt = {
         //jwt private key
         secret: "fpY8Jwu24k5ew1E#",
-        //custom timeout seconds(default as a half hour)
-        timeout: 1800,
+        //custom timeout seconds(default as a half hour: 1800s)
+        timeout: 300,
     };
 
   // add your user config here
