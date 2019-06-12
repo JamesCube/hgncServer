@@ -572,7 +572,11 @@ class UserController extends Controller {
                 const expireAt = userInfo.exp;
                 if(expireAt*1000 > new Date().getTime()) {
                     //超时时间大于现在的时间，即意味着该token没有超时
-                    this.fail('healthy token, do not need reflesh');
+                    this.success({
+                        token: '',
+                        code: '00',
+                        msg: 'healthy token, do not need reflesh',
+                    });
                     return;
                 }
                 //redis里是最新的token可以更换token
@@ -588,12 +592,24 @@ class UserController extends Controller {
                 //pc端和app端，redis token超时的时间不一样，应该分别区分
                 const expire = ctx.helper.getProperty(tokenKey);
                 await ctx.app.redis.set(`token_${userInfo.id}`, token, 'EX', expire);
-                this.success(token);
+                this.success({
+                    token: token,
+                    code: 'OK',
+                    msg: 'reflesh success'
+                });
             } else {
                 if(!redisToken) {
-                    this.fail('cannot refleshToken with redis token is null, please relogin');
+                    this.success({
+                        token: '',
+                        code: 'RN',
+                        msg: 'cannot refleshToken with redis token is null, please relogin',
+                    });
                 } else {
-                    this.fail('not latest token, cannot reflesh');
+                    this.success({
+                        token: '',
+                        code: 'NW',
+                        msg: 'not latest token, cannot reflesh',
+                    });
                 }
             }
         } catch (e) {
