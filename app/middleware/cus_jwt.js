@@ -6,7 +6,7 @@ module.exports = (options, app) => {
      * FF	redis token timeout, please relogin	（超时，无法reflesh）重定向到登录页面
      * SF	not latest token	（非最新签发的token但token有效，被其他用户挤下来了）重定向到登录页面
      * ER	token invalid	（token解码失败）请勿伪造token
-     * SF	token timeout	  需要更换token
+     * RF	token timeout	  需要更换token
      * OE	not latest token;token timeout	（非最新签发的token且超时）重定向到登录页面
      */
     return async function cus_jwt(ctx, next) {
@@ -55,7 +55,7 @@ module.exports = (options, app) => {
                 }
                 if(token === redisToken) {
                     //redisToken是最新的
-                    _forbidden(ctx, 'token timeout', 'SF');
+                    _forbidden(ctx, 'token timeout', 'RF');
                 } else {
                     _forbidden(ctx, 'not latest token;token timeout', 'OE');
                 }
