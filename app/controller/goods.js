@@ -80,7 +80,7 @@ class GoodsController extends Controller {
     }
 
     /**
-     * 根据商品类型分页查询商品详情
+     * 根据商品类型分页查询商品详情（二级分类）
      * @param type 商品类新
      * @param page 页码
      * @param pageSize 页大小
@@ -96,6 +96,39 @@ class GoodsController extends Controller {
         }
         const options = { type: type, alive: true, listing: true, recycled: false};
         const res = await service.goods.goodsService.goods_page_list(options, page, pageSize, orderBy);
+        this.success(res)
+    }
+
+    /**
+     * 根据商品类型分页查询商品详情(一级分类)
+     * @param type 商品类新
+     * @param page 页码
+     * @param pageSize 页大小
+     * @returns {Promise<void>}
+     */
+    async getGoodsByFirstClass() {
+        const { ctx, service } = this;
+        const { type, page, pageSize, orderBy } = ctx.request.body;
+        //入参校验
+        if(!type || !type.trim()) {
+            this.fail("type is required");
+            return;
+        }
+        //先根据一级分类id查询出该一级分类下所有的二级分类
+        const secondClassRes = await this.app.mysql.select('t_goods_type_second', {
+            where: { pid: type },
+            columns: ['id'],
+        });
+        //secondClass为所有二级分类的id数组
+        const secondClass = secondClassRes. map(item => `${type};${item.id}`);
+        const options = { type: secondClass, alive: true, listing: true, recycled: false};
+        const totalArr = await this.app.mysql.select('t_goods', {
+            where: options,
+            columns: ['id'],
+        });
+        const res = await service.goods.goodsService.goods_page_list(options, page, pageSize, orderBy, totalArr.length);
+        /*const totalNum = await this.app.mysql.select('t_goods', options);
+        const res = await service.goods.goodsService.goods_page_list(options, page, pageSize, orderBy, totalNum);*/
         this.success(res)
     }
 

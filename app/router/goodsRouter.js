@@ -14,8 +14,10 @@ module.exports = app => {
     router.post('/v1/api/goods/secondClass', controller.goods.getSecondClass);
     //根据商品id数组查询商品详情
     router.post('/v1/api/goods/goodsList', controller.goods.goodsList);
-    //根据商品分类查询商品详情
+    //根据商品分类查询商品详情(二级分类)
     router.post('/v1/api/goods/goodsPageList', controller.goods.goodsPageList);
+    //根据商品分类查询商品详情（一级分类）
+    router.post('/v1/api/goods/topClass/goodsPageList', controller.goods.getGoodsByFirstClass);
     //商品名称模糊搜索
     router.post('/v1/api/goods/search', controller.goods.searchGoods);
     //获取推荐给指定用户的商品列表

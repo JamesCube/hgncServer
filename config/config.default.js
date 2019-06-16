@@ -29,6 +29,7 @@ module.exports = appInfo => {
           , '/v1/api/goods/secondClass'
           , '/v1/api/goods/goodsList'
           , '/v1/api/goods/goodsPageList'
+          , '/v1/api/goods/topClass/goodsPageList'
           , '/v1/api/goods/recommend'
           , '/v1/api/sms/sendSms'
           , '/v1/api/user/refleshToken'],

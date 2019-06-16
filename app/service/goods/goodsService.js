@@ -115,9 +115,9 @@ class goodsService extends Service {
      * @param type string 商品类型id
      * @return {Promise<void>}
      */
-    async goods_page_list(options, page = 1, pageSize = 10, orderBy = [['createTime','desc']]) {
+    async goods_page_list(options, page = 1, pageSize = 10, orderBy = [['createTime','desc']], cusTotal) {
         //查询未分页前的数据行总数,若没有type入参则查询所有商品类型
-        let goodsNum = await this._getGoodsNum(options.type, options.alive, options.recycled, options.listing);
+        let goodsNum = cusTotal || await this._getGoodsNum(options.type, options.alive, options.recycled, options.listing);
         const pg = this.utils.pagefaultTolerant(goodsNum, page, pageSize);
         pg.data = []
         if(pg.total !== 0) {
