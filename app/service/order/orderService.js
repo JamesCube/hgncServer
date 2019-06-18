@@ -21,18 +21,20 @@ class goodsService extends Service {
         const length = goods.length;
         const _now = new Date().getTime();
         const orderId = this.utils.genSnowId();
+        let result = {
+            res: true,
+            msg: orderId,
+            totalPrice: 0,
+        };
         let arr = goods.map(item => {
             item.id = orderId;
             item.userId = userId;
             item.addressId = addressId;
             item.createTime = _now;
             item.timestamp = _now;
+            result.totalPrice += item.price;
             return item;
-        })
-        let result = {
-            res: true,
-            msg: orderId
-        };
+        });
         try{
             const resp = await this.app.mysql.insert('t_order', arr);
             if(resp.affectedRows !== length) {

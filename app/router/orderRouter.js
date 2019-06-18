@@ -18,6 +18,8 @@ module.exports = app => {
     router.post('/v1/api/order/delete', controller.order.deleteOrders);
     //支付成功后的回调
     router.post('/v1/api/order/paySuccess', controller.order.paySuccess);
+    //支付宝支付结果异步回调函数（通知服务端支付宝的支付结果）
+    router.post('/v1/api/order/payResult', controller.order.payResult);
     //确认收货
     router.post('/v1/api/order/received', controller.order.received);
 };

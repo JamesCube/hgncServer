@@ -2,12 +2,22 @@
 
 const Service = require('../base/baseService');
 const AlipaySdk = require('alipay-sdk');
+const path = require('path');
 var moment = require('moment');
 const fs = require('fs');
-const alipaySdk = new AlipaySdk({
+const crypto = require('crypto');
+let ALIPAY_CONFIG = {
+    APP_ID: '2019061665632155',
+    APP_GATEWAY_URL: 'http://server.maiyidesan.cn/v1/api/order/payResult',//用于接收支付宝异步通知
+    AUTH_REDIRECT_URL: 'xxxxxxx',//第三方授权或用户信息授权后回调地址。授权链接中配置的redirect_uri的值必须与此值保持一致。
+    APP_PRIVATE_KEY_PATH: path.join(__dirname, './app-private-key.pem'),//应用私钥
+    //APP_PUBLIC_KEY_PATH: path.join(__dirname, 'pem', 'remind', 'sandbox', 'app-public.pem'),//应用公钥
+    ALI_PUBLIC_KEY_PATH: path.join(__dirname, './ali-public-key.pem'),//阿里公钥
+};
+/*const alipaySdk = new AlipaySdk({
     appId: '2019061665632155',// 鹏鱼
-    privateKey: fs.readFileSync('./app-private-key.pem', 'ascii'),
-});
+    privateKey: fs.readFileSync(path.join(__dirname, './app-private-key.pem'), 'ascii'),
+});*/
 
 class alipayService extends Service {
     constructor(ctx) {
@@ -15,29 +25,47 @@ class alipayService extends Service {
         // 就可以直接通过 this.ctx 获取 ctx 了
         // 还可以直接通过 this.app 获取 app 了
         this.utils = this.ctx.helper;
-        //oss实例
-        this.image_bucket = this.utils.get_image_bucket();
+        this.app_private_key = fs.readFileSync(ALIPAY_CONFIG.APP_PRIVATE_KEY_PATH, 'utf8');
+        this.ali_public_key = fs.readFileSync(ALIPAY_CONFIG.ALI_PUBLIC_KEY_PATH, 'utf8');
     }
 
-    async pay() {
+    pay(title, no, amount) {
         let params = new Map();
-        params.set('app_id', this.accountSettings.APP_ID);
+        params.set('app_id', '2019061665632155');
         params.set('method', 'alipay.trade.app.pay');
         params.set('charset', 'utf-8');
         params.set('sign_type', 'RSA2');
         params.set('timestamp', moment().format('YYYY-MM-DD HH:mm:ss'));
         params.set('version', '1.0');
-        params.set('notify_url', this.accountSettings.APP_GATEWAY_URL);
-        params.set('biz_content', this._buildBizContent('商品名称xxxx', '商户订单号xxxxx', '商品金额8.88'));
-        const result = await alipaySdk.exec('alipay.trade.app.pay', {
-            grantType: 'authorization_code',
-            charset: 'utf-8',
-            sign_type: 'RSA2',
-            sign: ,
-            timestamp: moment().format('YYYY-MM-DD HH:mm:ss'),
-            version: '1.0',
-            biz_content:
-        });
+        params.set('notify_url', ALIPAY_CONFIG.APP_GATEWAY_URL);
+        params.set('biz_content', this._goodsContent(title, no, amount));
+        params.set('sign', this._buildSign(params))
+        return [...params].map(([k, v]) => `${k}=${encodeURIComponent(v)}`).join('&')
+    }
+
+    /**
+     * 验证支付宝异步通知的合法性
+     * @param params  支付宝异步通知结果的参数
+     * @returns {*}
+     */
+    verifySign(params) {
+        try {
+            let sign = params['sign'];//签名
+            let signType = params['sign_type'];//签名类型
+            let paramsMap = new Map();
+            for (let key in params) {
+                paramsMap.set(key, params[key]);
+            }
+            let paramsList = [...paramsMap].filter(([k1, v1]) => k1 !== 'sign' && k1 !== 'sign_type' && v1);
+            //2.按照字符的键值ASCII码递增排序
+            paramsList.sort();
+            //3.组合成“参数=参数值”的格式，并且把这些参数用&字符连接起来
+            let paramsString = paramsList.map(([k, v]) => `${k}=${decodeURIComponent(v)}`).join('&');
+            return this._verifyWithPublicKey(signType, sign, paramsString, this.ali_public_key);
+        } catch (e) {
+            console.error(e);
+            return false;
+        }
     }
 
 
@@ -74,31 +102,58 @@ class alipayService extends Service {
         //3.组合成“参数=参数值”的格式，并且把这些参数用&字符连接起来
         let paramsString = paramsList.map(([k, v]) => `${k}=${v}`).join('&');
 
-        let privateKey = fs.readFileSync(this.accountSettings.APP_PRIVATE_KEY_PATH, 'utf8');
         let signType = paramsMap.get('sign_type');
-        return this._signWithPrivateKey(signType, paramsString, privateKey);
+        return this._signWithPrivateKey(signType, paramsString, this.app_private_key);
+    }
+
+
+    /**
+     * 通过私钥给字符串签名
+     * @param signType      返回参数的签名类型：RSA2或RSA
+     * @param content       需要加密的字符串
+     * @param privateKey    私钥
+     * @returns {number | PromiseLike<ArrayBuffer>}
+     * @private
+     */
+    _signWithPrivateKey(signType, content, privateKey) {
+        let sign;
+        if (signType.toUpperCase() === 'RSA2') {
+            sign = crypto.createSign("RSA-SHA256");
+        } else if (signType.toUpperCase() === 'RSA') {
+            sign = crypto.createSign("RSA-SHA1");
+        } else {
+            throw new Error('请传入正确的签名方式，signType：' + signType);
+        }
+        sign.update(content);
+        return sign.sign(privateKey, 'base64');
     }
 
     /**
-     * 复制路径文件
-     * @param from
-     * @param to
-     * @return {Promise<*>}
+     * 验证签名
+     * @param signType      返回参数的签名类型：RSA2或RSA
+     * @param sign          返回参数的签名
+     * @param content       参数组成的待验签串
+     * @param publicKey     支付宝公钥
+     * @returns {*}         是否验证成功
+     * @private
      */
-     async oss_paths_copy(from, to) {
-         const res = await this.image_bucket.copy(to, from);
-         return res;
-     }
+    _verifyWithPublicKey(signType, sign, content, publicKey) {
+        try {
+            let verify;
+            if (signType.toUpperCase() === 'RSA2') {
+                verify = crypto.createVerify('RSA-SHA256');
+            } else if (signType.toUpperCase() === 'RSA') {
+                verify = crypto.createVerify('RSA-SHA1');
+            } else {
+                throw new Error('未知signType：' + signType);
+            }
+            verify.update(content);
+            return verify.verify(publicKey, sign, 'base64')
+        } catch (err) {
+            console.error(err);
+            return false;
+        }
+    }
 
-    /**
-     * 删除path路径文件,批量接口
-     * @since 2019/04/09
-     * @param paths 目标路径数组 array
-     * @returns {Promise<*>}
-     */
-     async oss_paths_delete(paths) {
-        const res = await this.image_bucket.deleteMulti(paths);
-        return res;
-     }
 }
 module.exports = alipayService;
