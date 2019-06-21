@@ -12,16 +12,12 @@ class OrderController extends Controller {
      */
     async createOrder() {
         const { ctx, service } = this;
-        const { userId, addressId, goods } = ctx.request.body;
-        //入参校验
-        if(!userId) {
-            this.fail("userId is required");
-            return;
-        }
+        const { addressId, goods } = ctx.request.body;
         if(!addressId) {
             this.fail("addressId is required");
             return;
         }
+        let userId = this.getUserId();
         const res = await service.order.orderService.orderCreate(userId, addressId, goods);
         if (res.res === true) {
             //当res为true时，msg为orderId
