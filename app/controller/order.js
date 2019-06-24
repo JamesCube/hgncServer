@@ -106,6 +106,7 @@ class OrderController extends Controller {
      */
     async payResult() {
         const { ctx, service } = this;
+        const { helper } = ctx;
         const res = ctx.request.body;
         const notifyTime = res.body.notify_time;//通知时间:通知的发送时间。格式为yyyy-MM-dd HH:mm:ss
         const notifyType = res.body.notify_type;//通知类型:通知的类型
@@ -141,7 +142,16 @@ class OrderController extends Controller {
         const isSuccess = service.common.alipay.verifySign(res);
         if (isSuccess) {
             if (tradeStatus === 'TRADE_FINISHED') {//交易状态TRADE_FINISHED的通知触发条件是商户签约的产品不支持退款功能的前提下，买家付款成功；或者，商户签约的产品支持退款功能的前提下，交易已经成功并且已经超过可退款期限。
-                outTradeNo
+                const orderId = outTradeNo;
+                const validStatus = await service.order.orderService.checkOrderStatus(orderId, helper.Enum.ORDER_STATUS.WAIT_PAY);
+                if(validStatus) {
+                    const res = await service.order.orderService.changeOrderStatus(orderId, helper.Enum.ORDER_STATUS.ALREADY_PAY, 'alipay');
+                    if(res === true) {
+                        this.success('operation success');
+                    } else {
+                        this.fail(res);
+                    }
+                }
             } else if (tradeStatus === 'TRADE_SUCCESS') {//状态TRADE_SUCCESS的通知触发条件是商户签约的产品支持退款功能的前提下，买家付款成功
 
             } else if (tradeStatus === 'WAIT_BUYER_PAY') {
