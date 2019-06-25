@@ -108,37 +108,37 @@ class OrderController extends Controller {
         const { ctx, service } = this;
         const { helper } = ctx;
         const res = ctx.request.body;
-        const notifyTime = res.body.notify_time;//通知时间:通知的发送时间。格式为yyyy-MM-dd HH:mm:ss
-        const notifyType = res.body.notify_type;//通知类型:通知的类型
-        const notifyId = res.body.notify_id;//通知校验ID:通知校验ID
-        const appId = res.body.app_id;//支付宝分配给开发者的应用Id:支付宝分配给开发者的应用Id
-        const charset = res.body.charset;//编码格式:编码格式，如utf-8、gbk、gb2312等
-        const version = res.body.version;//接口版本:调用的接口版本，固定为：1.0
-        const signType = res.body.sign_type;//签名类型:商户生成签名字符串所使用的签名算法类型，目前支持RSA2和RSA，推荐使用RSA2
-        const sign = res.body.sign;//签名:请参考<a href="#yanqian" class="bi-link">异步返回结果的验签</a>
-        const tradeNo = res.body.trade_no;//支付宝交易号:支付宝交易凭证号
+        // const notifyTime = res.body.notify_time;//通知时间:通知的发送时间。格式为yyyy-MM-dd HH:mm:ss
+        // const notifyType = res.body.notify_type;//通知类型:通知的类型
+        // const notifyId = res.body.notify_id;//通知校验ID:通知校验ID
+        // const appId = res.body.app_id;//支付宝分配给开发者的应用Id:支付宝分配给开发者的应用Id
+        // const charset = res.body.charset;//编码格式:编码格式，如utf-8、gbk、gb2312等
+        // const version = res.body.version;//接口版本:调用的接口版本，固定为：1.0
+        // const signType = res.body.sign_type;//签名类型:商户生成签名字符串所使用的签名算法类型，目前支持RSA2和RSA，推荐使用RSA2
+        // const sign = res.body.sign;//签名:请参考<a href="#yanqian" class="bi-link">异步返回结果的验签</a>
+        // const tradeNo = res.body.trade_no;//支付宝交易号:支付宝交易凭证号
         const outTradeNo = res.body.out_trade_no;//商户订单号:原支付请求的商户订单号
-        const outBizNo = res.body.out_biz_no;//商户业务号:商户业务ID，主要是退款通知中返回退款申请的流水号
-        const buyerId = res.body.buyer_id;//买家支付宝用户号:买家支付宝账号对应的支付宝唯一用户号。以2088开头的纯16位数字
-        const buyerLogonId = res.body.buyer_logon_id;//买家支付宝账号:买家支付宝账号
-        const sellerId = res.body.seller_id;//卖家支付宝用户号:卖家支付宝用户号
-        const sellerEmail = res.body.seller_email;//卖家支付宝账号:卖家支付宝账号
+        // const outBizNo = res.body.out_biz_no;//商户业务号:商户业务ID，主要是退款通知中返回退款申请的流水号
+        // const buyerId = res.body.buyer_id;//买家支付宝用户号:买家支付宝账号对应的支付宝唯一用户号。以2088开头的纯16位数字
+        // const buyerLogonId = res.body.buyer_logon_id;//买家支付宝账号:买家支付宝账号
+        // const sellerId = res.body.seller_id;//卖家支付宝用户号:卖家支付宝用户号
+        // const sellerEmail = res.body.seller_email;//卖家支付宝账号:卖家支付宝账号
         const tradeStatus = res.body.trade_status;//交易状态:交易目前所处的状态，见<a href="#jiaoyi" class="bi-link">交易状态说明</a>
-        const totalAmount = res.body.total_amount;//订单金额:本次交易支付的订单金额，单位为人民币（元）
-        const receiptAmount = res.body.receipt_amount;//实收金额:商家在交易中实际收到的款项，单位为元
-        const invoiceAmount = res.body.invoice_amount;//开票金额:用户在交易中支付的可开发票的金额
-        const buyerPayAmount = res.body.buyer_pay_amount;//付款金额:用户在交易中支付的金额
-        const pointAmount = res.body.point_amount;//集分宝金额:使用集分宝支付的金额
-        const refundFee = res.body.refund_fee;//总退款金额:退款通知中，返回总退款金额，单位为元，支持两位小数
-        const subject = res.body.subject;//订单标题:商品的标题/交易标题/订单标题/订单关键字等，是请求时对应的参数，原样通知回来
-        const body = res.body.body;//商品描述:该订单的备注、描述、明细等。对应请求时的body参数，原样通知回来
-        const gmtCreate = res.body.gmt_create;//交易创建时间:该笔交易创建的时间。格式为yyyy-MM-dd HH:mm:ss
-        const gmtPayment = res.body.gmt_payment;//交易付款时间:该笔交易的买家付款时间。格式为yyyy-MM-dd HH:mm:ss
-        const gmtRefund = res.body.gmt_refund;//交易退款时间:该笔交易的退款时间。格式为yyyy-MM-dd HH:mm:ss.S
-        const gmtClose = res.body.gmt_close;//交易结束时间:该笔交易结束时间。格式为yyyy-MM-dd HH:mm:ss
-        const fundBillList = res.body.fund_bill_list;//支付金额信息:支付成功的各个渠道金额信息，详见<a href="#zijin" class="bi-link">资金明细信息说明</a>
-        const passbackParams = res.body.passback_params;//回传参数:公共回传参数，如果请求时传递了该参数，则返回给商户时会在异步通知时将该参数原样返回。本参数必须进行UrlEncode之后才可以发送给支付宝
-        const voucherDetailList = res.body.voucher_detail_list;//优惠券信息:本交易支付时所使用的所有优惠券信息，详见<a href="#youhui" class="bi-link">优惠券信息说明</a>
+        // const totalAmount = res.body.total_amount;//订单金额:本次交易支付的订单金额，单位为人民币（元）
+        // const receiptAmount = res.body.receipt_amount;//实收金额:商家在交易中实际收到的款项，单位为元
+        // const invoiceAmount = res.body.invoice_amount;//开票金额:用户在交易中支付的可开发票的金额
+        // const buyerPayAmount = res.body.buyer_pay_amount;//付款金额:用户在交易中支付的金额
+        // const pointAmount = res.body.point_amount;//集分宝金额:使用集分宝支付的金额
+        // const refundFee = res.body.refund_fee;//总退款金额:退款通知中，返回总退款金额，单位为元，支持两位小数
+        // const subject = res.body.subject;//订单标题:商品的标题/交易标题/订单标题/订单关键字等，是请求时对应的参数，原样通知回来
+        // const body = res.body.body;//商品描述:该订单的备注、描述、明细等。对应请求时的body参数，原样通知回来
+        // const gmtCreate = res.body.gmt_create;//交易创建时间:该笔交易创建的时间。格式为yyyy-MM-dd HH:mm:ss
+        // const gmtPayment = res.body.gmt_payment;//交易付款时间:该笔交易的买家付款时间。格式为yyyy-MM-dd HH:mm:ss
+        // const gmtRefund = res.body.gmt_refund;//交易退款时间:该笔交易的退款时间。格式为yyyy-MM-dd HH:mm:ss.S
+        // const gmtClose = res.body.gmt_close;//交易结束时间:该笔交易结束时间。格式为yyyy-MM-dd HH:mm:ss
+        // const fundBillList = res.body.fund_bill_list;//支付金额信息:支付成功的各个渠道金额信息，详见<a href="#zijin" class="bi-link">资金明细信息说明</a>
+        // const passbackParams = res.body.passback_params;//回传参数:公共回传参数，如果请求时传递了该参数，则返回给商户时会在异步通知时将该参数原样返回。本参数必须进行UrlEncode之后才可以发送给支付宝
+        // const voucherDetailList = res.body.voucher_detail_list;//优惠券信息:本交易支付时所使用的所有优惠券信息，详见<a href="#youhui" class="bi-link">优惠券信息说明</a>
         const isSuccess = service.common.alipay.verifySign(res);
         if (isSuccess) {
             if (tradeStatus === 'TRADE_FINISHED') {//交易状态TRADE_FINISHED的通知触发条件是商户签约的产品不支持退款功能的前提下，买家付款成功；或者，商户签约的产品支持退款功能的前提下，交易已经成功并且已经超过可退款期限。
