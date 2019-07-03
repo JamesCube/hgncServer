@@ -1,23 +1,25 @@
 'use strict';
 
 const Service = require('../base/baseService');
-const AlipaySdk = require('alipay-sdk');
+const AlipaySdk = require('alipay-sdk').default;
 const path = require('path');
 var moment = require('moment');
 const fs = require('fs');
 const crypto = require('crypto');
 let ALIPAY_CONFIG = {
     APP_ID: '2019061665632155',
+    // APP_GATEWAY_URL: 'http://wooo.tech:7001/v1/api/order/payResult',//用于接收支付宝异步通知
     APP_GATEWAY_URL: 'http://server.maiyidesan.cn/v1/api/order/payResult',//用于接收支付宝异步通知
     AUTH_REDIRECT_URL: 'xxxxxxx',//第三方授权或用户信息授权后回调地址。授权链接中配置的redirect_uri的值必须与此值保持一致。
     APP_PRIVATE_KEY_PATH: path.join(__dirname, './app-private-key.pem'),//应用私钥
     //APP_PUBLIC_KEY_PATH: path.join(__dirname, 'pem', 'remind', 'sandbox', 'app-public.pem'),//应用公钥
     ALI_PUBLIC_KEY_PATH: path.join(__dirname, './ali-public-key.pem'),//阿里公钥
 };
-/*const alipaySdk = new AlipaySdk({
+const alipaySdk = new AlipaySdk({
     appId: '2019061665632155',// 鹏鱼
     privateKey: fs.readFileSync(path.join(__dirname, './app-private-key.pem'), 'ascii'),
-});*/
+    alipayPublicKey: fs.readFileSync(ALIPAY_CONFIG.ALI_PUBLIC_KEY_PATH, 'utf8'),
+});
 
 class alipayService extends Service {
     constructor(ctx) {
@@ -49,23 +51,8 @@ class alipayService extends Service {
      * @returns {*}
      */
     verifySign(params) {
-        try {
-            let sign = params['sign'];//签名
-            let signType = params['sign_type'];//签名类型
-            let paramsMap = new Map();
-            for (let key in params) {
-                paramsMap.set(key, params[key]);
-            }
-            let paramsList = [...paramsMap].filter(([k1, v1]) => k1 !== 'sign' && k1 !== 'sign_type' && v1);
-            //2.按照字符的键值ASCII码递增排序
-            paramsList.sort();
-            //3.组合成“参数=参数值”的格式，并且把这些参数用&字符连接起来
-            let paramsString = paramsList.map(([k, v]) => `${k}=${decodeURIComponent(v)}`).join('&');
-            return this._verifyWithPublicKey(signType, sign, paramsString, this.ali_public_key);
-        } catch (e) {
-            console.error(e);
-            return false;
-        }
+        const res = alipaySdk.checkNotifySign(params)
+        return res;
     }
 
 

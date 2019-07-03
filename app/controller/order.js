@@ -107,7 +107,7 @@ class OrderController extends Controller {
     async payResult() {
         const { ctx, service } = this;
         const { helper } = ctx;
-        const res = ctx.request.body;
+        const res = ctx.request;
         // const notifyTime = res.body.notify_time;//通知时间:通知的发送时间。格式为yyyy-MM-dd HH:mm:ss
         // const notifyType = res.body.notify_type;//通知类型:通知的类型
         // const notifyId = res.body.notify_id;//通知校验ID:通知校验ID
@@ -139,9 +139,11 @@ class OrderController extends Controller {
         // const fundBillList = res.body.fund_bill_list;//支付金额信息:支付成功的各个渠道金额信息，详见<a href="#zijin" class="bi-link">资金明细信息说明</a>
         // const passbackParams = res.body.passback_params;//回传参数:公共回传参数，如果请求时传递了该参数，则返回给商户时会在异步通知时将该参数原样返回。本参数必须进行UrlEncode之后才可以发送给支付宝
         // const voucherDetailList = res.body.voucher_detail_list;//优惠券信息:本交易支付时所使用的所有优惠券信息，详见<a href="#youhui" class="bi-link">优惠券信息说明</a>
-        const isSuccess = service.common.alipay.verifySign(res);
+        const isSuccess = service.common.alipay.verifySign(res.body);
         if (isSuccess) {
-            if (tradeStatus === 'TRADE_FINISHED') {//交易状态TRADE_FINISHED的通知触发条件是商户签约的产品不支持退款功能的前提下，买家付款成功；或者，商户签约的产品支持退款功能的前提下，交易已经成功并且已经超过可退款期限。
+            if (tradeStatus === 'TRADE_FINISHED' || tradeStatus === 'TRADE_SUCCESS') {
+                //交易状态TRADE_FINISHED的通知触发条件是商户签约的产品不支持退款功能的前提下，买家付款成功；或者，商户签约的产品支持退款功能的前提下，交易已经成功并且已经超过可退款期限。
+                //交易状态TRADE_SUCCESS的通知触发条件是商户签约的产品支持退款功能的前提下，买家付款成功
                 const orderId = outTradeNo;
                 const validStatus = await service.order.orderService.checkOrderStatus(orderId, helper.Enum.ORDER_STATUS.WAIT_PAY);
                 if(validStatus) {
@@ -152,8 +154,6 @@ class OrderController extends Controller {
                         this.fail(res);
                     }
                 }
-            } else if (tradeStatus === 'TRADE_SUCCESS') {//状态TRADE_SUCCESS的通知触发条件是商户签约的产品支持退款功能的前提下，买家付款成功
-
             } else if (tradeStatus === 'WAIT_BUYER_PAY') {
 
             } else if (tradeStatus === 'TRADE_CLOSED') {

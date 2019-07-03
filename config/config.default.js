@@ -33,6 +33,7 @@ module.exports = appInfo => {
           , '/v1/api/goods/recommend'
           , '/v1/api/sms/sendSms'
           , '/v1/api/common/configs'
+          , '/v1/api/order/payResult'
           , '/v1/api/user/refleshToken'],
   };
 

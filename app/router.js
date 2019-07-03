@@ -7,6 +7,7 @@ module.exports = app => {
     const { router, controller } = app;
     router.get('/', controller.home.index);
     router.post('/v1/api/common/configs', controller.home.getCusConfig);
+    router.post('/v1/api/test', controller.home.isOnline);
     router.post('/v1/api/common/reloadConfigs', controller.home.reloadConfigs);
     //user路由
     require('./router/userRouter')(app);
