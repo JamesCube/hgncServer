@@ -13,10 +13,10 @@ let loaded = false;
 let properties = null;
 const SnowflakeCodon = require("snowflake-codon");
 // Initialize snowflake
-var appId = 1; //default value 0
-var machineId = 1; //default value 0
-var firstYear = 2019; //default value 1970
-var timestampPrecision = 200; // optional, default value 1000 (ms)
+let appId = 1; //default value 0
+let machineId = 1; //default value 0
+let firstYear = 2019; //default value 1970
+let timestampPrecision = 200; // optional, default value 1000 (ms)
 //订单id雪花算法
 const snowflake = new SnowflakeCodon(appId, machineId, firstYear, timestampPrecision);
 //商品规格id雪花算法
@@ -33,34 +33,34 @@ module.exports = {
      * @author chengjiajun
      * @since 2019/02/25
      * @param key
-     * @returns {*}
+     * @return {*}
      */
     getProperty(key) {
-        if(!key) return undefined;
+        if (!key) return undefined;
         if (!loaded) {
             const file = path.join(__dirname, custom_config_url);
             try {
                 const result = fs.readFileSync(file, 'utf-8');
                 //过滤掉json文件中以//开头的注释行
-                const filterArr = result.split(os.EOL).filter(row => !this.app._.startsWith(row.trim(), '//'))
+                const filterArr = result.split(os.EOL).filter(row => !this.app._.startsWith(row.trim(), '//'));
                 loaded = true;
                 properties = JSON.parse(filterArr.join(""));
-            } catch(e) {
+            } catch (e) {
                 loaded = false;
                 this.ctx.logger.error(new Error('读取自定义配置文件失败'));
             }
         }
-        return properties[key]
+        return properties[key];
     },
 
     /**
      * 获得单例oss实例
      * @author chengjiajun
      * @since 2019/04/04
-     * @returns {*}
+     * @return {*}
      */
     get_image_bucket() {
-        if(!image_bucket) {
+        if (!image_bucket) {
             const keyId = this.getProperty('OSS_ACCESSKEY_ID');
             const keySecret = this.getProperty('OSS_ACCESSKEY_SECRET');
             image_bucket = new OSS({
@@ -70,14 +70,14 @@ module.exports = {
                 bucket: 'hgnc-goods-images',
             });
         }
-        return image_bucket
+        return image_bucket;
     },
 
     /**
      * 获得所有的配置项
      * @author chengjiajun
      * @since 2019/03/23
-     * @returns {*}
+     * @return {*}
      */
     getAllProperty() {
         if (!loaded) {
@@ -86,7 +86,7 @@ module.exports = {
                 const result = fs.readFileSync(file, 'utf-8');
                 loaded = true;
                 properties = JSON.parse(result);
-            } catch(e) {
+            } catch (e) {
                 loaded = false;
                 this.ctx.logger.error(new Error('读取自定义配置文件失败'));
             }
@@ -108,7 +108,7 @@ module.exports = {
      * 生成6位数验证码
      * @author chengjiajun
      * @since 2019/02/25
-     * @returns {string}
+     * @return {string}
      */
     genAuthCode() {
         return ((Math.random() * 900000) | 100000) + '';
@@ -120,7 +120,7 @@ module.exports = {
      * 但是我在插入算法里控制了异常流程，如重复，则换一个code重新插入，故此算法可以保证邀请码唯一
      * @author chengjiajun
      * @since 2019/03/10
-     * @returns {string}
+     * @return {string}
      */
     genInviteCode(length = 6) {
         if (length > 0) {
@@ -131,9 +131,9 @@ module.exports = {
                 nums += data[r];
             }
             return nums;
-        } else {
-            return false;
         }
+        return false;
+
     },
 
     Enum: {
@@ -164,7 +164,7 @@ module.exports = {
             DIRECTOR: 3,
             //总代
             AGENT: 4,
-        }
+        },
     },
 
     /**
@@ -175,10 +175,10 @@ module.exports = {
     genSnowId(module) {
         //cnpm i snowflake-codon
         let result;
-        if(module === 2) {
+        if (module === 2) {
             //商品类别雪花id
             result = snowflake_2.nextId();
-        } else if(module === 3){
+        } else if (module === 3) {
             //商品雪花id
             result = snowflake_goods.nextId();
         } else {
@@ -196,14 +196,14 @@ module.exports = {
      * @return {{total: *, page: *, pageSize: *}}
      */
     pagefaultTolerant(total, page, pageSize) {
-        if(page < 1) page = 1;
-        if(pageSize < 0) pageSize = 10;
+        if (page < 1) page = 1;
+        if (pageSize < 0) pageSize = 10;
         const result = {
-            total: total,
-            page: page,
-            pageSize: pageSize,
-        }
-        if(total < ((page-1)*pageSize+1)){
+            total,
+            page,
+            pageSize,
+        };
+        if (total < ((page - 1) * pageSize + 1)) {
             //页数超过最大，需要返回最后一页
             const pageCount = Math.ceil(total / pageSize);
             result.page = pageCount === 0 ? 1 : pageCount;
@@ -211,12 +211,12 @@ module.exports = {
         return result;
     },
 
-  // 字符串转对象，转换出错返回{}或者默认值
-      JSONParse(str, defaultResult) {
+    // 字符串转对象，转换出错返回{}或者默认值
+    JSONParse(str, defaultResult) {
         try {
-          return JSON.parse(str);
+            return JSON.parse(str);
         } catch (e) {
-          return defaultResult || {};
+            return defaultResult || {};
         }
-      },
+    },
 };
