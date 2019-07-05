@@ -249,5 +249,16 @@ class goodsService extends Service {
         return row;
     }
 
+    /**
+     * 查询用户的订单数量信息，如待付款订单数量，待发货数量，待收货数量，已完成数量
+     * @param userId
+     * @returns {Promise<void>}
+     */
+    async getOrdersNum(userId) {
+        const sql = `select count(distinct id) as num,status from t_order where userId = '${userId}' and alive = true group by status`
+        const resArr = await this.app.mysql.query(sql);
+        return resArr;
+    }
+
 }
 module.exports = goodsService;

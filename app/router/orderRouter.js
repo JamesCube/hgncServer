@@ -14,6 +14,10 @@ module.exports = app => {
     router.post('/v1/api/order/list', controller.order.orderList);
     //根据订单id数组，批量查询订单详情
     router.post('/v1/api/order/ids', controller.order.getOrdersByIds);
+    //查询当前用户的订单数量详情
+    router.post('/v1/api/order/num', controller.order.getOrdersNum);
+    //关闭超时的订单
+    router.post('/v1/api/order/close', controller.order.closeOrder);
     //删除订单信息
     router.post('/v1/api/order/delete', controller.order.deleteOrders);
     //支付成功后的回调

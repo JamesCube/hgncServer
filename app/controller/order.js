@@ -251,6 +251,49 @@ class OrderController extends Controller {
         }
         this.success(rows);
     }
+
+    /**
+     * 查询当前用户的订单数量信息，如待付款订单数量，待发货数量，待收货数量，已完成数量
+     * @returns {Promise<void>}
+     */
+    async getOrdersNum() {
+        const { ctx, service } = this;
+        const userId = this.getUserId();
+        const res = await service.order.orderService.getOrdersNum(userId);
+        this.success(res);
+    }
+
+    /**
+     * 查询当前用户的订单数量信息，如待付款订单数量，待发货数量，待收货数量，已完成数量
+     * @returns {Promise<void>}
+     */
+    async closeOrder() {
+        const { ctx, service } = this;
+        const { id } = ctx.request.body;
+        const { helper } = ctx;
+        if(!id) {
+            this.fail("order id is required");
+            return;
+        }
+        const orders = await service.order.orderService.getByIds("t_order", id);
+        if(orders && Array.isArray(orders) && orders.length > 0) {
+            const current_order_status = orders[0].status;
+            const alive = orders[0].alive;
+            if(current_order_status === helper.Enum.ORDER_STATUS.WAIT_PAY && alive) {
+                //未支付且存在的订单才可以被关闭
+                const res = await service.order.orderService.changeOrderStatus(id, helper.Enum.ORDER_STATUS.CANCEL_WITHOUT_PAY);
+                if(res === true) {
+                    this.success(`close success`);
+                } else {
+                    this.fail('close failed');
+                }
+            } else {
+                this.fail('订单状态校验失败或无此订单信息');
+            }
+        } else {
+            this.fail('无此订单信息');
+        }
+    }
 }
 
 module.exports = OrderController;
