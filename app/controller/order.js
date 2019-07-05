@@ -42,11 +42,8 @@ class OrderController extends Controller {
      */
     async orderList() {
         const { ctx, service } = this;
-        const { userId, status, page, pageSize, orderBy } = ctx.request.body;
-        if(!userId) {
-            this.fail("userId is required");
-            return;
-        }
+        const { status, page, pageSize, orderBy } = ctx.request.body;
+        let userId = this.getUserId();
         const res = await service.order.orderService.listOrder(userId, status, page, pageSize, orderBy);
         this.success(res);
     }

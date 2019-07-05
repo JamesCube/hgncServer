@@ -65,7 +65,7 @@ class goodsService extends Service {
      */
     async listOrder(userId, status, page = 1, pageSize = 10, orderBy = [['createTime','desc']]) {
         const _where = status ? { userId: userId, status: status, alive: true } : { userId: userId, alive: true };
-        const rows = await this.app.mysql.select('t_order', {
+        const rows = await this.app.mysql.select('v_order', {
             where: _where,
             orders: orderBy, //时间倒序排序，最新的顶到最上显示
             limit: pageSize, // 返回数据量
