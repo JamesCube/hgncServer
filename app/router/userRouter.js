@@ -26,6 +26,8 @@ module.exports = app => {
     router.post('/v1/api/user/me', controller.user.refleshMe);
     //获取用户详情(批量接口)
     router.post('/v1/api/user/userInfo', controller.user.userInfo);
+    //设置用户昵称
+    router.post('/v1/api/user/nickname', controller.user.setUserName);
     //发送手机验证码
     router.post('/v1/api/sms/sendSms', controller.user.getSms);
     //修改密码
@@ -63,4 +65,6 @@ module.exports = app => {
     router.post('/v1/api/user/images/myImages', controller.user.getMyImages);
     //删除我的图片(批量接口)
     router.post('/v1/api/user/images/delete', controller.user.deleteMyImages);
+    //上传我的头像
+    router.post('/v1/api/user/images/head', controller.user.uploadUserHead);
 };

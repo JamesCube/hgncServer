@@ -1,6 +1,7 @@
 'use strict';
 
 const Controller = require('./baseController');
+const moment = require('moment');
 
 class UserController extends Controller {
 
@@ -389,16 +390,46 @@ class UserController extends Controller {
      * 方法流程暂未完成
      */
     async uploadUserHead() {
-        const { ctx, service } = this;
-        const stream = await ctx.getFileStream();
-        const imageName = stream.filename;
-        let res;
-        try {
-            // 异步把文件流 写入
-            res = await service.common.oss.image_stream_upload(imageName, stream);
-            this.success(res);
-        } catch (e) {
-            this.fail(e.message);
+        const { ctx, service  } =   this;
+        let userId = this.getUserId();
+        const files = ctx.multipart();
+        let file;
+        while ((file = await files()) != null) {
+            if (file.length) {
+                // 官方解释为 arrays are busboy fields，实际上通俗应理解为非文件流自定义字段参数
+                //file 作为一个数组 有4个item，分别对用field，value，valueTruncated，fieldnameTruncated
+                continue;
+            } else {
+                const fileName = file.filename;
+                if (!fileName) {
+                    // user click `upload` before choose a file,
+                    // `part` will be file stream, but `part.filename` is empty
+                    // must handler this, such as log error.
+                    continue;
+                }
+                // otherwise, it's a stream
+                //fieldname为formData的key值
+                const fieldName = file.fieldname;
+                if(fieldName !== 'image') continue;
+                try {
+                    const time = moment().format('YYYYMMDDHHmmss');
+                    const res = await service.common.oss.image_stream_upload(`users/${userId}/head/${time}_${fileName}`, file);
+                    if(res.res.status === 200) {
+                        //上传成功的图片名，需要更新user表中的头像字段，增加对oss上图片的引用
+                        const addImage = await service.user.userService.updateUserHead(userId, `${time}_${fileName}`);
+                        if(addImage === true) {
+                            this.log('uploadUserHead', userId, userId, `上传了头像：${time}_${fileName}`);
+                            this.success("upload success");
+                        } else {
+                            //删掉oss上的图片，保持同步
+                            this.oss_paths_delete([`users/${userId}/head/${time}_${fileName}`]);
+                            this.fail(addImage);
+                        }
+                    }
+                } catch (e) {
+                    this.fail(e.message);
+                }
+            }
         }
     }
 
@@ -856,6 +887,24 @@ class UserController extends Controller {
             }
         } else {
             this.fail("invalid ids")
+        }
+    }
+
+    /**
+     * 设置用户昵称，可设置为空
+     * @param imageName
+     * @returns {Promise<*|boolean>}
+     */
+    async setUserName() {
+        const { ctx, service  } = this;
+        const { name } = ctx.request.body;
+        const userId = this.getUserId();
+        const userName = (name || '').trim();
+        const res = await service.user.userService.setUserName(userId, userName);
+        if (res === true) {
+            this.success("operation success")
+        } else {
+            this.fail(res);
         }
     }
 }

@@ -549,5 +549,28 @@ class UserService extends Service {
         return result;
     }
 
+    /**
+     * 更新用户的头像，当imageName为空时，删除用户头像
+     * 注意：更改头像后仅更改了oss图片的引用，原来的头像还在oss上没有被删除
+     * @param imageName
+     * @returns {Promise<*|boolean>}
+     */
+    async updateUserHead(userId, imageName) {
+        const params = { id: userId, head: imageName };
+        const res = await this.updateRows('t_user', [ params ]);
+        return res;
+    }
+
+    /**
+     * 设置用户昵称，可设置为空
+     * @param imageName
+     * @returns {Promise<*|boolean>}
+     */
+    async setUserName(userId, userName) {
+        const params = { id: userId, userName };
+        const res = await this.updateRows('t_user', [ params ]);
+        return res;
+    }
+
 }
 module.exports = UserService;
