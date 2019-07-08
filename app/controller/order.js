@@ -240,7 +240,7 @@ class OrderController extends Controller {
             this.fail("ids is required");
             return;
         }
-        const rows = await service.user.userService.getByIds('t_order', ids);
+        const rows = await service.user.userService.getByIds('v_order', ids);
         if(rows > 0) {
             for(let row of rows) {
                 if(row.status === helper.Enum.ORDER_STATUS.WAIT_PAY) {
