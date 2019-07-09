@@ -40,10 +40,28 @@ class BaseController extends Controller {
      * 消费相关的日志记录数据
      * 分表记录
      */
-    async log_cost(type, executor, influencer, description) {
-        const { service } = this;
-        const res = await service.base.baseService.log(type, executor, influencer, description, "t_log_cost");
-        return res
+    async log_cost(type, executor, influencer, orderId, goodsId, title, price) {
+        const _now = new Date().getTime();
+        const p = {
+            id: this.utils.uuidv1(),
+            type,
+            executor,
+            influencer,
+            orderId,
+            goodsId,
+            title,
+            description: price,
+            createTime: _now,
+        };
+        let result;
+        try{
+            const resp = await this.app.mysql.insert('t_log_cost', p);
+            result = resp.affectedRows === 1;
+        } catch (e) {
+            result = e.sqlMessage
+        } finally {
+            return result
+        }
     }
 
     /**

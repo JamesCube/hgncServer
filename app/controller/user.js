@@ -741,7 +741,6 @@ class UserController extends Controller {
 
     /**
      * 查询我的团队的总成交额业绩
-     * @param userId 用户id
      * @param start 开始时间毫秒数（可选）
      * @param end 结束时间毫秒数（可选）
      * @return {Promise<void>}
@@ -789,6 +788,56 @@ class UserController extends Controller {
             res.forEach(v => {
                 result += parseFloat(v.description);
             });
+        }
+        this.success(result);
+    }
+
+    /**
+     * 查询我的团队的总成交额详情
+     * @param userId 用户id
+     * @param start 开始时间毫秒数（可选）
+     * @param end 结束时间毫秒数（可选）
+     * @return {Promise<void>}
+     */
+    async salesDetail() {
+        const { ctx, service } = this;
+        const { type, start, end } = ctx.request.body;
+        if((start && !end) || (!start && end)) {
+            this.fail('missing startTime or endTime');
+            return
+        }
+        if(start >= end) {
+            this.fail('endTime cannot be less than startTime');
+            return
+        }
+        const userId = this.getUserId();
+        const me = await service.user.userService._getUserById(userId);
+        if(!me) {
+            this.fail('illegal current user');
+            return
+        }
+        let result;
+        let sons = []
+        await service.user.userService._getSonUsers(me.inviteCode, sons);
+        if(!start && !end) {
+            //开始时间和结束时间都没有，查询所有时间段的成交额（不以时间做筛选条件）
+            const costArr = await service.user.userService.getRows("t_log_cost", sons, "influencer", ["phone", "createTime", "description", "title"]);
+            result = costArr;
+        } else {
+            //需要按时间条件筛选的情况
+            const sql = `SELECT 
+                            description 
+                        FROM t_log_cost
+                        WHERE 
+                            type = 'user_consumption_add' 
+                        AND influencer in (:ids) 
+                        AND createTime BETWEEN :startTime and :endTime`;
+            const res = await this.app.mysql.query(sql, {
+                ids: sons,
+                startTime: start,
+                endTime: end,
+            });
+            result = res;
         }
         this.success(result);
     }

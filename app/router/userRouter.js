@@ -58,6 +58,8 @@ module.exports = app => {
     router.post('/v1/api/user/myTeamPerformance', controller.user.getMyTeamPerformance);
     //查询某段时间内新增的团队成员普通积分
     router.post('/v1/api/user/myTeamPoint', controller.user.getMyTeamPoint);
+    //查询某段时间内新增的团队成员普通积分
+    router.post('/v1/api/user/team/salesDetail', controller.user.salesDetail);
     /** 用户图片服务相关  **/
     //上传我的图片
     router.post('/v1/api/user/images/upload', controller.user.uploadMyImages);

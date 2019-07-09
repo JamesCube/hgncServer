@@ -175,7 +175,7 @@ class OrderController extends Controller {
             this.fail("order id is required");
             return;
         }
-        const orders = await service.order.orderService.getByIds("t_order", orderId);
+        const orders = await service.order.orderService.getByIds("v_order", orderId);
         let current_order_status;
         let current_order_userId;
         if(orders && Array.isArray(orders) && orders.length > 0) {
@@ -194,10 +194,12 @@ class OrderController extends Controller {
                 //确认收货后需要计算积分详情
                 //获得当前订单产生的积分
                 let point = 0;
+                let totalPrice = 0;
                 if(orders.length > 0) {
                     const default_rate = helper.getProperty("DEFAULT_GOODS_POINTRATE");
                     for(let order of orders) {
                         point += (order.price * (order.pointRate ===0 ? default_rate : order.pointRate));
+                        totalPrice += order.price;
                     }
                     //积分可能算出来小数需要四舍五入取整
                     point = Math.round(point);
@@ -211,14 +213,16 @@ class OrderController extends Controller {
                     }
                 }
                 //增量更新用户总消费额(当普通会员消费总额大于vip阈值的时候会自动提升为vip角色)
-                if(order.price > 0) {
-                    const updateCost = await service.user.userService.incremental_update_cost(current_order_userId, order.price);
+                if(totalPrice > 0) {
+                    const updateCost = await service.user.userService.incremental_update_cost(current_order_userId, totalPrice);
                     if(updateCost === true) {
                         //记录日志
-                        this.log_cost("user_consumption_add", current_order_userId, current_order_userId, order.price);
+                        for(let order of orders) {
+                            this.log_cost("user_consumption_add", current_order_userId, current_order_userId, order.id, order.goodsId, order.title, order.price);
+                        }
                     }
                     //计算该订单的佣金分成
-                    await service.order.orderService.commissionClear(current_order_userId, order.price);
+                    await service.order.orderService.commissionClear(current_order_userId, totalPrice);
                 }
             } else {
                 this.fail(res);

@@ -180,7 +180,7 @@ class baseService extends Service {
      * 普通积分相关的日志记录数据
      * 分表记录
      */
-    async log_cost(type, executor, influencer, description) {
+    async log_point(type, executor, influencer, description) {
         return await this.log(type, executor, influencer, description, "t_log_point")
     }
 
