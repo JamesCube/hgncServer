@@ -824,20 +824,24 @@ class UserController extends Controller {
             const costArr = await service.user.userService.getRows("t_log_cost", sons, "influencer", ["phone", "createTime", "description", "title"]);
             result = costArr;
         } else {
-            //需要按时间条件筛选的情况
-            const sql = `SELECT 
+            if(sons.length > 0) {
+                //需要按时间条件筛选的情况
+                const sql = `SELECT 
                             description 
                         FROM t_log_cost
                         WHERE 
                             type = 'user_consumption_add' 
                         AND influencer in (:ids) 
                         AND createTime BETWEEN :startTime and :endTime`;
-            const res = await this.app.mysql.query(sql, {
-                ids: sons,
-                startTime: start,
-                endTime: end,
-            });
-            result = res;
+                const res = await this.app.mysql.query(sql, {
+                    ids: sons,
+                    startTime: start,
+                    endTime: end,
+                });
+                result = res;
+            } else {
+                result = [];
+            }
         }
         this.success(result);
     }
