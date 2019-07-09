@@ -533,48 +533,91 @@ class UserController extends Controller {
 
     /**
      * 根据角色，获取我的团队成员列表
-     * @param userId 用户id
+     * @param type 枚举类型标识用户想查询什么角色的成员 member manager director
      * @return {Promise<void>}
      */
     async getGroupMembers() {
         const { ctx, service } = this;
         const utils = ctx.helper;
-        const { userId } = ctx.request.body;
-        if(!userId) {
-            //入参校验
-            this.fail('userId is required');
-            return
-        }
+        const { type } = ctx.request.body;
+        const userId = this.getUserId()
+        //查询出最新的实时的user数据行
         const userRow = await service.user.userService._getUserById(userId);
         if(!userRow) {
             //入参校验
             this.fail('invalid userId');
             return
         }
+        //type不传时后台逻辑默认处理 为‘member’枚举类型
+        const t = type || 'member';
         const userRole = userRow.role;
         const shortId = userRow.inviteCode;
-        const myInvited = await service.user.userService.getRows("t_user", shortId, "parentCode", ["id", "phone", "role", "inviteCode", "createTime", "alive"]);
+        //查询出所有我的子用户，包括alive为false的用户（注意用户的角色不限，可能比我自己要大）
+        let mySonIds = []
+        await service.user.userService._getSonUsers(shortId, mySonIds);
+        const mySons = await service.user.userService.getRows("t_user", mySonIds, "id", ["id", "phone", "role", "inviteCode", "createTime", "alive"]);
+        //const mySons = await service.user.userService.getRows("t_user", shortId, "parentCode", ["id", "phone", "role", "inviteCode", "createTime", "alive"]);
+        const commonAndVip = [...utils.filterUser_by_role(mySons, utils.Enum.USER_ROLE.COMMON), ...utils.filterUser_by_role(mySons, utils.Enum.USER_ROLE.VIP)]
         let result = [];
         switch (userRole) {
             case utils.Enum.USER_ROLE.VIP:
-                //VIP
-                result = myInvited;
+                //我是VIP
+                if(t === 'member') {
+                    //查询我的团队成员，可能为普通用户或VIP
+                    result = commonAndVip;
+                } else {
+                    //result初始化的值本来就为[] 无需再赋值
+                    //result = [];
+                }
                 break;
             case utils.Enum.USER_ROLE.MANAGER:
-                //经理
-                if(myInvited.length > 0) {
-                    const parentCodeArr =  myInvited.map(item => item.inviteCode);
-                    const res = await service.user.userService.getRows("t_user", parentCodeArr, "parentCode");
-                    result = [...res, ...myInvited];
+                //我是经理
+                if(t === 'member') {
+                    //我要查我直接邀请的会员，和我邀请的会员所邀请的间接会员
+                    result = commonAndVip;
+                } else if (t === 'manager') {
+                    //我要查我的经理，我无法看到我平级的经理，故只能看到我自己(返回有效字段)
+                    result = [{
+                        id: userRole.id,
+                        phone: userRole.phone,
+                        role: userRole.role,
+                        inviteCode: userRole.inviteCode,
+                        createTime: userRole.createTime,
+                        alive: userRole.alive,
+                    }]
+                } else {
+                    //result初始化的值本来就为[] 无需再赋值
+                    //result = [];
                 }
                 break;
             case utils.Enum.USER_ROLE.DIRECTOR:
-                //总监
-                result = myInvited;
+                //我是总监
+                if(t === 'member') {
+                    result = commonAndVip;
+                } else if (t === 'manager') {
+                    result = utils.filterUser_by_role(mySons, utils.Enum.USER_ROLE.MANAGER);
+                } else if(t === 'director') {
+                    //我要查我的总监，我无法看到我平级的总监，故只能看到我自己(返回有效字段)
+                    result = [{
+                        id: userRole.id,
+                        phone: userRole.phone,
+                        role: userRole.role,
+                        inviteCode: userRole.inviteCode,
+                        createTime: userRole.createTime,
+                        alive: userRole.alive,
+                    }]
+                }
                 break;
             case utils.Enum.USER_ROLE.AGENT:
-                //总代
-                result = myInvited;
+                //我是总代
+                if(t === 'member') {
+                    result = commonAndVip;
+                } else if (t === 'manager') {
+                    result = utils.filterUser_by_role(mySons, utils.Enum.USER_ROLE.MANAGER);
+                } else if(t === 'director') {
+                    //我要查我的总监，我无法看到我平级的总监，故只能看到我自己(返回有效字段)
+                    result = utils.filterUser_by_role(mySons, utils.Enum.USER_ROLE.DIRECTOR);
+                }
                 break;
             default:
                 this.fail('user role invalid');

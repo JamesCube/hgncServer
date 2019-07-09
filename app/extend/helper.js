@@ -168,6 +168,20 @@ module.exports = {
     },
 
     /**
+     * 按指定角色筛选用户数据行
+     * @param arr
+     * @param role
+     * @returns {Array}
+     */
+    filterUser_by_role(arr, role) {
+        let res = [];
+        if(arr && Array.isArray(arr) && arr.length > 0) {
+            res = arr.filter(o => o.role === role);
+        }
+        return res;
+    },
+
+    /**
      * 雪花算法，自增id
      * @author chengjiajun
      * @since 2019/03/31
