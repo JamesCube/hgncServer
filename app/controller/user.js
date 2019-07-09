@@ -950,6 +950,71 @@ class UserController extends Controller {
             this.fail(res);
         }
     }
+
+    /**
+     * 用户申请实名认证
+     * @returns {Promise<void>}
+     */
+    async applyStore() {
+        const { ctx, service  } = this;
+        const files = ctx.multipart();
+        const userId = this.getUserId();
+        let file;
+        let uploadFlag = true;
+        let rowData = {userId};
+        let ossPath = [];
+        while ((file = await files()) != null) {
+            if (file.length) {
+                // 官方解释为 arrays are busboy fields，实际上通俗应理解为非文件流自定义字段参数
+                //file 作为一个数组 有4个item，分别对用field，value，valueTruncated，fieldnameTruncated
+                rowData[file[0]] = (file[1] || "").trim();
+                continue;
+            } else {
+                const fileName = file.filename;
+                if (!fileName) {
+                    // user click `upload` before choose a file,
+                    // `part` will be file stream, but `part.filename` is empty
+                    // must handler this, such as log error.
+                    continue;
+                }
+                // otherwise, it's a stream
+                //fieldname为formData的key值
+                const fieldName = file.fieldname;
+                if(fieldName !== 'front' && fieldName !== 'back' && fieldName !== 'license' && fieldName !== 'entrust') continue;
+                try {
+                    const time = moment().format('YYYYMMDDHHmmss');
+                    const res = await service.common.oss.image_stream_upload(`users/${userId}/apply/${time}_${fileName}`, file);
+                    if(res.res.status === 200) {
+                        //上传成功的图片名，放到result中返回，后续需要更新goods商品数据行
+                        const addImage = await service.user.userService.image_add(userId, `${time}_${fileName}`);
+                        if(addImage === true) {
+                            rowData[fieldName] = `${time}_${fileName}`;
+                            ossPath.push(`users/${userId}/apply/${time}_${fileName}`)
+                            this.success("upload success");
+                        } else {
+                            //删掉oss上的图片，保持同步
+                            this.oss_paths_delete([`users/${userId}/apply/${time}_${fileName}`]);
+                            this.fail(addImage);
+                        }
+                    }
+                } catch (e) {
+                    uploadFlag = false;
+                    this.fail(e.message);
+                }
+            }
+        }
+        if(uploadFlag) {
+            //上传图片成功，则新增实名认证数据行
+            const res = await service.user.userService.insert_certification(rowData);
+            if(res === true) {
+                this.success('apply success')
+            } else {
+                //删除之前上传成功的图片
+                this.oss_paths_delete(ossPath);
+                this.fail(res);
+            }
+        }
+    }
 }
 
 module.exports = UserController;

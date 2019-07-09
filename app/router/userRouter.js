@@ -67,4 +67,6 @@ module.exports = app => {
     router.post('/v1/api/user/images/delete', controller.user.deleteMyImages);
     //上传我的头像
     router.post('/v1/api/user/images/head', controller.user.uploadUserHead);
+    //开店实名认证
+    router.post('/v1/api/user/store/apply', controller.user.applyStore);
 };

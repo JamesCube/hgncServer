@@ -572,5 +572,28 @@ class UserService extends Service {
         return res;
     }
 
+    /**
+     * 新增实名认证数据行
+     * @param params
+     * @returns {Promise<boolean>}
+     */
+    async insert_certification(params) {
+        const _now = new Date().getTime();
+        const p = Object.assign(params, {
+            id: this.utils.uuidv1(),
+            status: '0', // 0待审核，1审核通过，r审核拒绝
+            createTime: _now,
+        });
+        let result;
+        try{
+            const resp = await this.app.mysql.insert('t_certification', p);
+            result = resp.affectedRows === 1;
+        } catch (e) {
+            result = e.sqlMessage;
+        } finally {
+            return result
+        }
+    }
+
 }
 module.exports = UserService;
